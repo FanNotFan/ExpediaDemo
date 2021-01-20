@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FORM Text</title>
+    <link rel="stylesheet" id="templatecss" type="text/css" href="../static/css/dark-matter.css">
+{#    <link rel="stylesheet" type="text/css" href="../static/css/basic-grey.css">#}
+{#    <link rel="stylesheet" type="text/css" href="../static/css/bootstrap-frm.css">#}
+{#    <link rel="stylesheet" type="text/css" href="../static/css/elegant-aero.css">#}
+{#    <link rel="stylesheet" type="text/css" href="../static/css/smart-green.css">#}
+{#    <link rel="stylesheet" type="text/css" href="../static/css/white-pink.css">#}
+</head>
+<body class="signin">
+<form action="/download" method="POST" class="dark-matter" target="_self">
+    <h1>Crawler Form
+        <span>Please fill all the texts in the fields.</span>
+    </h1>
+    <div style="color: red;margin: 0 auto; padding-left: 30px;">
+        {% if get_flashed_messages() %}
+            {{ get_flashed_messages()[0] }}
+        {% endif %}
+    </div>
+    <label>
+        <span>Themplate :</span>
+        <select id="template" name="themplate" onchange="changeStyle();">
+            <option value="dark-matter">dark-matter</option>
+            <option value="basic-grey">basic-grey</option>
+            <option value="elegant-aero">elegant-aero</option>
+            <option value="smart-green">smart-green</option>
+            <option value="white-pink">white-pink</option>
+            <option value="bootstrap-frm">bootstrap-frm</option>
+        </select>
+    </label>
+    <label>
+        <span>Download Keyword :</span>
+        <input id="keyword" type="text" name="keyword" placeholder="Please enter the download keyword"/>
+    </label>
+    <label>
+        <span>Search Engine :</span>
+        <input id="searchEngine" type="text" name="searchEngine" placeholder="Bing" value="Bing" readonly="readonly"/>
+    </label>
+
+    <label>
+        <span>Limits :</span>
+        <input id="numberOfImages" type="number" name="numberOfImages"
+               placeholder="Please enter the number of downloaded images"/>
+    </label>
+
+    {#    <label>#}
+    {#        <span>Message :</span>#}
+    {#        <textarea id="message" name="message" placeholder="Your Message to Us"></textarea>#}
+    {#    </label>#}
+{#    <label>#}
+{#        <span>Driver Path :</span>#}
+{#        <select name="selection">#}
+{#            <option value="General Question">General Question</option>#}
+{#            <option value="/Users/hiCore/Software/WebDrivers/chromedriver_83">Dev Driver Path</option>#}
+{#        </select>#}
+{#    </label>#}
+    <label>
+        <span>&nbsp;</span>
+        <input type="submit" class="button" value="Send"/>
+    </label>
+</form>
+<script>
+    function changeStyle() {
+        var template = document.getElementById("template");
+        var index = template.selectedIndex;
+        var templatevalue = template.options[index].value;
+        var templatecss = document.getElementById("templatecss");
+        templatecss.setAttribute("href", "../static/css/" + templatevalue + ".css");
+        document.getElementsByTagName("form")[0].setAttribute("class", templatevalue);
+    }
+</script>
+</body>
+<style>
+    body.signin {
+        height: auto;
+        background: url(../static/img/code-wallpaper-9.jpg) no-repeat center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        color: rgba(255, 255, 255, .95)
+    }
+</style>
+</html>

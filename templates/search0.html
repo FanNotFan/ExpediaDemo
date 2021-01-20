@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DownLode</title>
+</head>
+<body class="signin">
+<div id="container">
+    <div class="search bar6">
+        <fieldset class="form-group" style="border: 0px;">
+            <form name="lform" method="POST" action="/download" target="_self">
+                <input id="keyword" name="keyword" type="text" placeholder="请输入下载关键字" name="cname">
+                <div class="form-group row">
+                    <div style="position:fixed;height: calc(1.5em + .75rem + 2px);margin-left: -40px;margin-top: -42px;"
+                         class="col form-group col-md-6">
+                        <span style="width:18px;overflow:hidden">
+                            <select style="font-size: large;width:90px;margin-left:-50px;height: calc(1.5em + 1.8rem + -14px);"
+                                    onchange="this.parentNode.nextElementSibling.value=this.value">
+                                <option value="Google"
+                                        selected>Engines</option>
+                                <option value="Google">
+                                    Google
+                                </option>
+                                <option value="Baidu">
+                                    Baidu
+                                </option>
+                                <option value="Bing">
+                                    Bing
+                                </option>
+                            </select>
+                        </span>
+                        <input id="searchEngine" name="searchEngine" type="text" style="display: none;width:50%;position:absolute;left:0px; height: calc(1.5em + .75rem + 2px); border-radius: .3rem;"
+                               oninput="setCustomValidity('')">
+                    </div>
+                </div>
+                <button type="submit"></button>
+            </form>
+        </fieldset>
+    </div>
+    <div style="color: red;margin: 0 auto; padding-left: 30px;">
+        {% if get_flashed_messages() %}
+            {{ get_flashed_messages()[0] }}
+        {% endif %}
+    </div>
+</div>
+<div style="
+    border-radius: 20px;
+    width: calc(100% - 800px);
+    height: 350px;
+    margin: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;">
+    <iframe id="my_iframe" allowtransparency="true" frameBorder='0'
+            scrolling='auto'
+            marginwidth='0' marginheight='0'
+            {#                                                    style="background: black; width: 100%; font-size: 0px; margin-top: 10px; margin-bottom: 10px; height: 480px; display: none"#}
+            style="border: 2px solid #b64c48; background: black; float: right; width: calc(100% - 800px); height: 480px; display: inline-flex;position: absolute; margin-left: 10px;border-radius: 10px;">
+
+    </iframe>
+</div>
+</body>
+<script src="../static/js/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+<script>
+    var log_list = [];
+    $(document).ready(function () {
+        if (log_list.length == 0) {
+            document.getElementById("my_iframe").style.display = "none";
+        } else {
+            document.getElementById("my_iframe").style.display = "";
+        }
+        namespace = '/log';
+        var socket_url = location.protocol + '//' + document.domain + ':' + location.port + namespace;
+        console.log("origin address = " + socket_url);
+        var socket = io.connect(socket_url);
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+        socket.on('server_response', function (res) {
+            document.getElementById("my_iframe").style.display = "";
+            if (log_list.length >= 166) {
+                log_list.splice(0, log_list.length)
+            }
+            log_list.unshift(res + '</br>');
+            var my_iframe = document.getElementById("my_iframe");
+            ed = document.all ? my_iframe.contentWindow.document : my_iframe.contentDocument;
+            content = showLog(log_list, ed);
+            content.close();
+        });
+
+        var showLog = function (log_list, ed) {
+            ed.open()
+            ed.contentEditable = true;
+            ed.designMode = 'on';
+            ed.write('<div style="color:#4a7544">' + log_list + '</div>');
+            return ed
+        };
+
+    });
+</script>
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        height: 100%
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-weight: 500;
+        font-family: "Microsoft YaHei", "宋体", "Segoe UI", "Lucida Grande", Helvetica, Arial, sans-serif, FreeSans, Arimo;
+    }
+
+    body.signin {
+        height: auto;
+        background: url(../static/img/code-wallpaper-8.jpg) no-repeat center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        color: rgba(255, 255, 255, .95)
+    }
+
+    #container {
+        width: 500px;
+    {#height: 820px;#} margin: 0 auto;
+        margin-top: 200px;
+    }
+
+    div.search {
+        padding: 10px 0;
+    }
+
+    form {
+        position: relative;
+        width: 450px;
+        margin: 0 auto;
+    }
+
+    input, button {
+        border: none;
+        outline: none;
+    }
+
+    input {
+        width: 100%;
+        height: 42px;
+        padding-left: 13px;
+    }
+
+    button {
+        height: 42px;
+        width: 42px;
+        cursor: pointer;
+        position: absolute;
+    }
+
+    /*搜索框6*/
+
+    .bar6 input {
+        border: 2px solid #c5464a;
+        border-radius: 5px;
+        background: transparent;
+        top: 0;
+        right: 0;
+        font-size: initial;
+        background-color: white;
+    }
+
+    .bar6 button {
+        background: #c5464a;
+        border-radius: 0 5px 5px 0;
+        width: 60px;
+        top: 0;
+        right: 0;
+    }
+
+    .bar6 button:before {
+        content: "下载";
+        font-size: 13px;
+        color: #F9F0DA;
+    }
+</style>
+</html>
