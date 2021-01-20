@@ -63,6 +63,7 @@ def pattern_mapping():
     logger.debug("REQUEST_METHOD : {}".format(request.method))
     hotel_id = request.form.get('hotelId')
     observe = request.form.get('observe')
+    enableCache = request.form.get('enableCache')
     group_id = request.form.get('groupID')
     message = request.form.get('message')
     personCnt = request.form.get('personCnt')
@@ -91,7 +92,7 @@ def pattern_mapping():
         gpfile = '{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, hotel_id)
         all_pattern_group_image = '{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
         gfimg = '{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
-        if os.path.exists(gpfile) and os.path.exists(gfimg) and os.path.exists(all_pattern_group_image):
+        if os.path.exists(gpfile) and os.path.exists(gfimg) and os.path.exists(all_pattern_group_image) and enableCache=='true':
             logger.debug("Grouping file already exist!!")
             gp_df = pd.read_csv(gpfile, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
             best_group_id = np.random.choice(
@@ -105,7 +106,7 @@ def pattern_mapping():
 
         linear_relationship_image = OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
         mapping_function_file = '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, hotel_id, global_bast_group_id,observe)
-        if os.path.exists(linear_relationship_image) and os.path.exists(mapping_function_file):
+        if os.path.exists(linear_relationship_image) and os.path.exists(mapping_function_file) and enableCache=='true':
             logger.debug("Mapping function file already exist!!")
             patternMappingInstance = PatternMapping(hotel_id, observe, int(global_bast_group_id),
                                                     int(ratePlanLevel), int(lengthOfStayDayCnt), int(personCnt))
