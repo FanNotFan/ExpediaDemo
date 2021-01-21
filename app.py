@@ -1,13 +1,10 @@
 import os
-from io import BytesIO
-from urllib.parse import quote
 import pandas as pd
 import numpy as np
 from flask import Flask, send_file, make_response, url_for
 from threading import Lock
 from flask import request, redirect
 from datetime import timedelta
-
 from tools import logger
 # 方法来渲染模板
 # 将模板名和你想作为关键字的参数传入模板的变量
@@ -32,8 +29,7 @@ thread_lock = Lock()
 # socketio = SocketIO(app)
 
 # 打开调试模式：启用了调试支持，服务器会在代码修改后自动重新载入，并在发生错误时提供一个相当有用的调试器
-app.run(debug=True)
-
+# app.run(debug=True)
 
 @app.route("/", methods=['GET', 'POST'])
 @app.route('/mapping/')
