@@ -121,7 +121,8 @@ def th():
 if __name__ == '__main__':
 	# 循环建立连接创建一个线程
 	Thread(target=th).start()
-	log_path = DEBUG_LOG_PATH
+	APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+	log_path = os.path.join(APP_ROOT, "Log")
 	log_name = time.strftime("%Y-%m-%d.log", time.localtime())
 	print(os.path.join(log_path,log_name))
 	cmd = "tail -fn 1000 {log_path}".format(log_path=os.path.join(log_path,log_name))
