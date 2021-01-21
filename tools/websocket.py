@@ -7,7 +7,7 @@ import copy
 import os
 import time
 import subprocess
-from settings import DEBUG_LOG_PATH
+# from settings import DEBUG_LOG_PATH
 
 global users
 users = set()
