@@ -117,15 +117,17 @@ def th():
 	while True:
 		acce()
 
-
-if __name__ == '__main__':
+def main():
 	# 循环建立连接创建一个线程
 	Thread(target=th).start()
-	APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+	APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 	log_path = os.path.join(APP_ROOT, "Log")
 	log_name = time.strftime("%Y-%m-%d.log", time.localtime())
-	print(os.path.join(log_path,log_name))
-	cmd = "tail -fn 1000 {log_path}".format(log_path=os.path.join(log_path,log_name))
+	# print(os.path.join(log_path, log_name))
+	log_path_name = os.path.join(log_path, log_name)
+	if not os.path.exists(log_path_name):
+		os.mknod(log_path_name)
+	cmd = "tail -fn 1000 {log_path}".format(log_path=log_path_name)
 	popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	print('连接成功')
 
@@ -139,4 +141,9 @@ if __name__ == '__main__':
 		for u in s_2:
 			print(u)
 			send_msg(u, bytes(message, encoding="utf-8"))
+
+main()
+
+if __name__ == '__main__':
+	main()
 
