@@ -24,6 +24,7 @@ import cProfile
 import os
 import glob
 import math
+import matplotlib
 from graphviz import Source
 from tools import logger
 from sklearn.model_selection import train_test_split
@@ -39,7 +40,7 @@ from service.pattern_mapping.mapping_function import MappingFunction
 plt.rcParams.update({'figure.max_open_warning': 0})
 min_max_scaler = preprocessing.MinMaxScaler()
 logger = logger.Logger("debug")
-
+matplotlib.use('Agg')
 # https://www.cs.princeton.edu/courses/archive/spring03/cs226/assignments/lines.html
 class PatternMapping(Spacer):
 

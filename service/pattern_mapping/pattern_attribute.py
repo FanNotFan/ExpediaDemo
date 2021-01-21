@@ -6,7 +6,6 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import scipy.spatial.distance as dis
 from scipy.ndimage import filters
-import matplotlib.pyplot as plt
 from io import StringIO
 from sklearn.feature_extraction.text import CountVectorizer
 from graphviz import Digraph
@@ -14,7 +13,6 @@ import cProfile
 import os
 import glob
 import seaborn as sns
-from matplotlib import cm
 from settings import COL_CFG, PATTERN_ATTRIBUTE_CLEANUP_OUTPUT
 from settings import PATTERN_ATTRIBUTE_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_INPUT_FOLDER, PATTERN_ATTRIBUTE_INPUT_FOLDER2
 from tools import logger

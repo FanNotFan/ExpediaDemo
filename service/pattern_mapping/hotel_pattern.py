@@ -11,6 +11,7 @@ from scipy.ndimage import filters
 from scipy.sparse import csgraph
 from scipy.sparse import csr_matrix
 from scipy import stats
+import matplotlib
 import matplotlib.pyplot as plt, seaborn
 from settings import HOME_FOLDER
 from io import StringIO
@@ -23,6 +24,7 @@ from settings import HOTEL_PATTERN_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER2, HO
 from settings import HOTEL_PATTERN_RATEPLANLEVEL, HOTEL_PATTERN_LOS, HOTEL_PATTERN_PERSONCNT, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
 from settings import HOTEL_PATTERN_Observes
 import glob
+matplotlib.use('Agg')
 logger = logger.Logger("debug")
 
 class HotelPattern(object):
