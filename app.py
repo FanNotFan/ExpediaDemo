@@ -96,7 +96,7 @@ def pattern_mapping():
             logger.debug("The best group index is group_{}".format(best_group_id))
             global_bast_group_id = best_group_id
         else:
-            read_data_rt, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)
+            read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)
             df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, hotel_id)
             global_bast_group_id = best_group_id
 

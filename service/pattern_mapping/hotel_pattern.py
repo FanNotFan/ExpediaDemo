@@ -29,6 +29,56 @@ logger = logger.Logger("debug")
 
 class HotelPattern(object):
 
+    def read_file_dbo_RoomType_NoIdent(self, hotel_id):
+        read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
+                                   engine='python',
+                                   header=0).fillna(0)
+        read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
+        read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
+        read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
+        logger.debug(read_data_rt.head(10))
+        read_data_rt = read_data_rt.loc[read_data_rt['SKUGroupID'].isin([hotel_id])]
+        return read_data_rt
+
+
+    def read_file_dboRatePlanNoIdent(self, read_data_rt):
+        read_data_rp = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', encoding='utf-8', sep=',',
+                                   engine='python',
+                                   header=0).fillna(0)
+        read_data_rp.drop(['UpdateTPID', 'ChangeRequestID', 'UpdateTUID'], axis=1, inplace=True)
+        read_data_rp.drop(['UpdateDate', 'LastUpdatedBy', 'UpdateClientID', 'RatePlanLogID'], axis=1, inplace=True)
+        read_data_rp = read_data_rp.loc[
+            (read_data_rp['ActiveStatusTypeID'] == 2) & (read_data_rp['RoomTypeID'].isin(read_data_rt['RoomTypeID']))]
+
+        # read_data_rp = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', sep=',', engine='python', header=0).fillna(0)
+        # read_data_rp = read_data_rp.loc[(read_data_rp['ActiveStatusTypeID'] == 2) \
+        #                                 & (read_data_rp['RoomTypeID'].isin(read_data_rt['RoomTypeID']))][['RatePlanID']]
+        return read_data_rp
+
+
+    def read_file_RatePlanLevelCostPrice(self, hotel_id, read_data_rp):
+        read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
+                                sep=',', engine='python',
+                                header=0).fillna(0)
+        read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp['RatePlanID'])]
+        logger.debug(read_data)
+
+        #     RatePlanID,StayDate,RatePlanLevel,PersonCnt,LengthOfStayDayCnt,ActiveStatusTypeID,
+        #     RatePlanLevelCostPriceLogSeqNbr,CostAmt,PriceAmt,CostCode,ChangeRequestIDOld,
+        #     SupplierUpdateDate,SupplierUpdateTPID,SupplierUpdateTUID,UpdateDate,SupplierLogSeqNbr,
+        #     ChangeRequestID,LARAmt,LARMarginAmt,LARTaxesAndFeesAmt
+
+        read_data.drop(['ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld'], axis=1,
+                       inplace=True)
+        read_data.drop(['SupplierUpdateDate', 'SupplierUpdateTPID', 'SupplierUpdateTUID'], axis=1, inplace=True)
+        read_data.drop(['UpdateDate', 'SupplierLogSeqNbr', 'ChangeRequestID'], axis=1, inplace=True)
+        read_data = read_data.loc[(read_data['RatePlanLevel'] == HOTEL_PATTERN_RATEPLANLEVEL) & (
+                    read_data['LengthOfStayDayCnt'] == HOTEL_PATTERN_LOS)
+                                  & (read_data['PersonCnt'] == HOTEL_PATTERN_PERSONCNT)]
+        read_data.drop(['RatePlanLevel', 'LengthOfStayDayCnt', 'PersonCnt'], axis=1, inplace=True)
+        return read_data
+
+
     def read_csv_data_and_filter(self, hotel_id):
         '''读取CSV文件并进行过滤
             First step: 根据 HotelID 获取所有 RoomTypeId (read_data_rt)
@@ -48,35 +98,10 @@ class HotelPattern(object):
                 选出 'RatePlanLevel' == HOTEL_PATTERN_RATEPLANLEVEL 'LengthOfStayDayCnt' == HOTEL_PATTERN_LOS 'PersonCnt' == HOTEL_PATTERN_PERSONCNT 的数据并删除这几列  = read_data
             Fourth step:
         '''
-        read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',', engine='python',
-                                   header=0).fillna(0)
-        read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
-        read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
-        read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
-        logger.debug(read_data_rt.head(10))
-        read_data_rt = read_data_rt.loc[read_data_rt['SKUGroupID'].isin([hotel_id])]
-
-        read_data_rp = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', sep=',', engine='python', header=0).fillna(0)
-        read_data_rp = read_data_rp.loc[(read_data_rp['ActiveStatusTypeID'] == 2) \
-                                        & (read_data_rp['RoomTypeID'].isin(read_data_rt['RoomTypeID']))][['RatePlanID']]
-
-        read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip', sep=',', engine='python',
-                                header=0).fillna(0)
-        read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp['RatePlanID'])]
-        logger.debug(read_data)
-
-        #     RatePlanID,StayDate,RatePlanLevel,PersonCnt,LengthOfStayDayCnt,ActiveStatusTypeID,
-        #     RatePlanLevelCostPriceLogSeqNbr,CostAmt,PriceAmt,CostCode,ChangeRequestIDOld,
-        #     SupplierUpdateDate,SupplierUpdateTPID,SupplierUpdateTUID,UpdateDate,SupplierLogSeqNbr,
-        #     ChangeRequestID,LARAmt,LARMarginAmt,LARTaxesAndFeesAmt
-
-        read_data.drop(['ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld'], axis=1, inplace=True)
-        read_data.drop(['SupplierUpdateDate', 'SupplierUpdateTPID', 'SupplierUpdateTUID'], axis=1, inplace=True)
-        read_data.drop(['UpdateDate', 'SupplierLogSeqNbr', 'ChangeRequestID'], axis=1, inplace=True)
-        read_data = read_data.loc[(read_data['RatePlanLevel'] == HOTEL_PATTERN_RATEPLANLEVEL) & (read_data['LengthOfStayDayCnt'] == HOTEL_PATTERN_LOS)
-                                  & (read_data['PersonCnt'] == HOTEL_PATTERN_PERSONCNT)]
-        read_data.drop(['RatePlanLevel', 'LengthOfStayDayCnt', 'PersonCnt'], axis=1, inplace=True)
-        return read_data_rt, read_data
+        read_data_rt = self.read_file_dbo_RoomType_NoIdent(hotel_id)
+        read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt)
+        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp)
+        return read_data_rt, read_data_rp, read_data
 
     def get_connected_components(self, read_data, Observe):
         read_data['z_score'] = stats.zscore(read_data[Observe])
@@ -225,7 +250,7 @@ class HotelPattern(object):
         # print(df)
 if __name__ == '__main__':
     hotelPattern = HotelPattern()
-    read_data_rt, read_data = hotelPattern.read_csv_data_and_filter(16639)
+    read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(16639)
     df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, 16639)
     hotelPattern.show_comparison_with_other_amt(df_cdist)
 

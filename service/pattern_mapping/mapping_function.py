@@ -1,7 +1,7 @@
 import datetime
 from tools.time_tool import TimeToolObject
 
-class MappingFunction():
+class MappingFunction:
     def __init__(self):
         self.A = 0
         self.b = 0

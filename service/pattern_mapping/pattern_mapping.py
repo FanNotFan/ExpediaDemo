@@ -4,38 +4,24 @@ import numpy as np
 from ast import literal_eval
 from sklearn import preprocessing
 from reportlab.lib import colors
-from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import DBSCAN
-import scipy.spatial.distance as dis
 from reportlab.platypus import Table, SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.pagesizes import letter, A4, A5, legal, elevenSeventeen, B0
 from sklearn.linear_model import LinearRegression
 from matplotlib.backends.backend_pdf import PdfPages
-from scipy.ndimage import filters
-from scipy.sparse import csgraph
-from scipy.sparse import csr_matrix
-from scipy import stats
 from tools.pdf_reportlab import Graphs
-import matplotlib.pyplot as plt, seaborn
-from io import StringIO
-import cProfile
+import matplotlib.pyplot as plt
 import os
-import glob
 import math
 import matplotlib
-from graphviz import Source
 from tools import logger
-from sklearn.model_selection import train_test_split
-from settings import OUTPUT_RESULT_FILE_NAME, DEBUG_LOG_PATH, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
-from settings import HOME_FOLDER, HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
-from settings import PATTERN_MAPPING_INPUT_FOLDER, PATTERN_ATTRIBUTE_INPUT_FOLDER2, PATTERN_MAPPING_OUTPUT_FOLDER
+from service.pattern_mapping.hotel_pattern import HotelPattern
+from settings import OUTPUT_RESULT_FILE_NAME, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
+from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
+from settings import PATTERN_MAPPING_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER
 import datetime
-import json
 import pickle
 from reportlab.lib.units import mm, inch
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 from service.pattern_mapping.mapping_function import MappingFunction
 plt.rcParams.update({'figure.max_open_warning': 0})
 min_max_scaler = preprocessing.MinMaxScaler()
@@ -182,27 +168,35 @@ class PatternMapping(Spacer):
 
     # safe_sparse_dot(X, self.coef_.T, dense_output=True) + self.intercept_
     # end of main
+
+    def read_group_file(self):
+        read_data_group = pd.read_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, self.hotel_id),
+                                   encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
+        read_data_group = read_data_group.loc[
+            (read_data_group['GroupID'] == self.group_id) & (read_data_group['Observe'] == 'CostAmt')]
+        return read_data_group
+
+
     def read_and_preprocess_csv_file(self):
         '''
         读取 ./Result/MINE2/{hotel_id}_observe_gp.csv 文件
         :return:
         '''
-        logger.debug("read_and_preprocess_csv_file begin")
+        logger.debug("read_and_preprocess_group_csv_file begin")
         # read_data_rt = pd.read_csv('{}{}_{}_gp.csv'.format(PATTERN_ATTRIBUTE_INPUT_FOLDER2, self.hotel_id, self.observe), \
         #                    encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
-        read_data_rt = pd.read_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, self.hotel_id), encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
-        read_data_rt = read_data_rt.loc[(read_data_rt['GroupID'] == self.group_id) & (read_data_rt['Observe'] == 'CostAmt')]
         #     RP2 = 260281795
         #     RP1 = 260282228
+        read_group_file = self.read_group_file()
         read_data = pd.read_csv(PATTERN_MAPPING_INPUT_FOLDER + str(self.hotel_id) + '_RatePlanLevelCostPrice.csv.zip', sep=',', engine='python',
                                 header=0).fillna(0)
-        rate_plan_list_ids = np.array(literal_eval(read_data_rt['Group'].iloc[0])).tolist()
+        rate_plan_list_ids = np.array(literal_eval(read_group_file['Group'].iloc[0])).tolist()
         read_data = read_data.loc[read_data['RatePlanID'].isin(rate_plan_list_ids)]
         read_data = read_data.loc[(read_data['RatePlanLevel'] == self.ratePlanLevel) & (read_data['LengthOfStayDayCnt'] == self.lengthOfStayDayCnt) \
                                   & (read_data['PersonCnt'] == self.person_cnt)]
         # read_data = read_data[['StayDate', self.observe, 'RatePlanID']]
         read_data = read_data[['StayDate', 'LengthOfStayDayCnt', 'PersonCnt', self.observe, 'RatePlanID']]
-        logger.debug("read_and_preprocess_csv_file done")
+        logger.debug("read_and_preprocess_group_csv_file done")
         return rate_plan_list_ids, read_data
 
 
@@ -292,7 +286,40 @@ class PatternMapping(Spacer):
             '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.hotel_id, self.group_id, self.observe),
             index=False)
 
+
+    def calc_delta(self, root_no, child_no, abp_df):
+        root = abp_df[abp_df['RatePlanID'] == root_no].reset_index(drop=True)
+        child = abp_df[abp_df['RatePlanID'] == child_no].reset_index(drop=True)
+        root = root.T
+        child = child.T
+        root.columns = ['Value']
+        child.columns = ['Value']
+        root['Value'] = root['Value'].apply(str)
+        child['Value'] = child['Value'].apply(str)
+        root = root.drop('RatePlanID')
+        child = child.drop('RatePlanID')
+        root['Value2'] = child['Value']
+        root['ValueMatch'] = np.where(root['Value'] == child['Value'], True, False)
+        root['ValueDiff'] = np.where(root['Value'] == child['Value'], '',
+                                     root['Value'] + '→' + child['Value'])
+        root = root.loc[root['ValueMatch'] == False]
+        root.drop(['Value', 'Value2', 'ValueMatch'], axis=1, inplace=True)
+        delta = re.sub(' +', ':', root['ValueDiff'].to_string())
+        print("delta:{}".format(delta))
+        return delta
+
+    def marge_rt_rp(self, group_rate_plan_ids):
+        hotelPattern = HotelPattern()
+        read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(self.hotel_id)
+        read_data_hilton = pd.merge(read_data_rt, read_data_rp, how='inner', left_on='RoomTypeID', right_on='RoomTypeID')
+        read_data_hilton.rename(columns={'SKUGroupID': 'HotelId'}, inplace=True)
+        logger.debug(read_data_hilton)
+        input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
+        return input_data
+
+
     def linear_prediction(self, rate_plan_list_ids, read_data):
+        input_data = self.marge_rt_rp(rate_plan_list_ids)
         RP1 = rate_plan_list_ids[0]
         rp1_dd = read_data.loc[read_data['RatePlanID'] == RP1].set_index('StayDate')
         rp_func = pd.DataFrame()
@@ -302,8 +329,7 @@ class PatternMapping(Spacer):
         row_size = math.ceil((data_length-1) ** 0.5)
         column_size = math.ceil((data_length-1) / row_size)
         fig, axes = plt.subplots(row_size, column_size, figsize=(20, 30))
-        # plt.subplots_adjust(left=0, bottom=0, right=1, top=1, hspace = 0.1, wspace = 0.1)
-        plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.1, wspace=0.1)
+        plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.2, wspace=0.3)
         # 设置主标题
         fig.suptitle('x_rp:{}'.format(RP1))
         for i in range(row_size):
@@ -313,6 +339,7 @@ class PatternMapping(Spacer):
                 if count >= data_length:
                     continue
                 RP2 = rate_plan_list_ids[count]
+                delta = self.calc_delta(RP1, RP2, input_data)
                 rp2_dd = read_data.loc[read_data['RatePlanID'] == RP2].set_index('StayDate')
                 rp_ds = pd.merge(rp1_dd, rp2_dd, on='StayDate')
                 if rp_ds.empty:
@@ -342,11 +369,13 @@ class PatternMapping(Spacer):
                 axes[i][j].scatter(X, y, color='blue', s=10)
                 axes[i][j].plot(X, pred_y, color='green', linewidth=1)
                 axes[i][j].plot(adjust_X, predic_y, color='red', linewidth=1)
+                axes[i][j].text(X.min(), y.mean(), delta)
                 rp_ds.to_csv(
                     '{}{}_Group{}_Line{}_{}_xy.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.hotel_id, self.group_id,
                                                            count,
                                                            self.observe),
                     index=False)
+        # plt.tight_layout(w_pad=1.0)
         plt.savefig(OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, self.hotel_id), format='jpg',
                     dpi=300)
         # plt.show()

@@ -124,8 +124,9 @@ class Websocket:
 		log_name = time.strftime("%Y-%m-%d.log", time.localtime())
 		log_path_name = os.path.join(DEBUG_LOG_PATH, log_name)
 		print(log_path_name)
+		# 创建日志文件
 		if not os.path.exists(log_path_name):
-			os.mknod(log_path_name)
+			open(log_path_name, 'w')
 		log_path_name = log_path_name.replace(" ","\ ")
 		cmd = r'tail -fn 1000 {log_path}'.format(log_path=log_path_name)
 		popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
