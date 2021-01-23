@@ -160,7 +160,7 @@ class HotelPattern(object):
         row_size = math.ceil(n / column_size)
         fig, axes = plt.subplots(row_size, column_size, figsize=(20, 30))
         # plt.subplots_adjust(left=0, bottom=0, right=1, top=1, hspace=0.1, wspace=0.1)
-        plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.1, wspace=0.1)
+        plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.1, wspace=0.2)
         for i in range(row_size):
             for j in range(0, column_size):
                 if count >= n:
