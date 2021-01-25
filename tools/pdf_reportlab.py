@@ -1,17 +1,16 @@
 import pandas as pd
-import numpy as np
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Table, SimpleDocTemplate, Paragraph
-from reportlab.lib.pagesizes import letter, elevenSeventeen
-from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.charts.legends import Legend
-from reportlab.graphics.shapes import Drawing
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.platypus import Table
+from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.units import mm, inch
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.pagesizes import elevenSeventeen
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.graphics.charts.legends import Legend
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from settings import PATTERN_MAPPING_OUTPUT_FOLDER,PATTERN_ATTRIBUTE_OUTPUT_FOLDER
 
 # 注册字体

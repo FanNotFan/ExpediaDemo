@@ -1,36 +1,38 @@
 import re
-import pandas as pd
-import numpy as np
-from ast import literal_eval
-from sklearn import preprocessing
-from reportlab.lib import colors
-from reportlab.platypus import Table, SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.lib.pagesizes import letter, A4, A5, legal, elevenSeventeen, B0
-from sklearn.linear_model import LinearRegression
-from matplotlib.backends.backend_pdf import PdfPages
-from tools.pdf_reportlab import Graphs
-import matplotlib.pyplot as plt
 import os
 import math
-import matplotlib
-from tools import logger
-from service.pattern_mapping.hotel_pattern import HotelPattern
-from settings import OUTPUT_RESULT_FILE_NAME, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
-from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
-from settings import PATTERN_MAPPING_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER
-import datetime
 import pickle
+import datetime
+import matplotlib
+import numpy as np
+import pandas as pd
+from tools import logger
+from ast import literal_eval
+import matplotlib.pyplot as plt
+from reportlab.lib import colors
+from sklearn import preprocessing
+
+from tools.execution_time import execute_time
+from tools.pdf_reportlab import Graphs
 from reportlab.lib.units import mm, inch
 from reportlab.lib.enums import TA_CENTER
+from sklearn.linear_model import LinearRegression
+from reportlab.lib.pagesizes import elevenSeventeen
+from service.pattern_mapping.hotel_pattern import HotelPattern
+from reportlab.platypus import SimpleDocTemplate, Spacer, Image
 from service.pattern_mapping.mapping_function import MappingFunction
+from settings import PATTERN_MAPPING_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER
+from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
+from settings import OUTPUT_RESULT_FILE_NAME, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
 plt.rcParams.update({'figure.max_open_warning': 0})
 min_max_scaler = preprocessing.MinMaxScaler()
 logger = logger.Logger("debug")
 matplotlib.use('Agg')
+
+
 # https://www.cs.princeton.edu/courses/archive/spring03/cs226/assignments/lines.html
 class PatternMapping(Spacer):
 
-    __group_id = 1
     def __init__(self, hotel_id, observe, group_id, ratePlanLevel, lengthOfStayDayCnt, person_cnt, **kw):
         self.hotel_id = hotel_id
         self.observe = observe
@@ -45,6 +47,7 @@ class PatternMapping(Spacer):
         height = min(self.height, availHeight-1e-8)
         return (availWidth, height)
 
+
     def getMaxPrecision(self, dataList):
         maxPrecison = 0
         for data in dataList:
@@ -57,6 +60,7 @@ class PatternMapping(Spacer):
             if maxPrecison < pointLengh:
                 maxPrecison = pointLengh
         return maxPrecison
+
 
     def calcuate_slope(self, adjust_X, adjust_Y, dic_slope, dic_slope_point, compareCount):
         counter = compareCount
@@ -75,65 +79,57 @@ class PatternMapping(Spacer):
             counter += 1
         return
 
-    # logic -> y = Ax +B
-    # 1. remove duplicate and sort the result by x
-    # 2. calculate the confficients for each x(with x-1,x-2,x-3)
-    # 3. sort the confficients to find the max value, marke it as A
-    # 4. use the fitable result to find the B with biggest hit ratio
-    # 5. time complexity: N
+    @execute_time
     def calculateLinear(self, x, y, date):
-        from operator import itemgetter
+        '''
+        # logic -> y = Ax +B
+        # 1. remove duplicate and sort the result by x
+        # 2. calculate the confficients for each x(with x-1,x-2,x-3)
+        # 3. sort the confficients to find the max value, marke it as A
+        # 4. use the fitable result to find the B with biggest hit ratio
+        # 5. time complexity: N
+        :param x:
+        :param y:
+        :param date:
+        :return:
+        '''
         import operator
         from tools.time_tool import TimeToolObject
         timeToolObject = TimeToolObject()
-
         # remove duplicate
         combineXY = np.concatenate((x, y), axis=1)
         combineXY = np.unique(combineXY, axis=0)
-
         # order by X
         combineXY = np.array(sorted(combineXY, key=lambda entry: entry[0]))
-
         # print(combineXY)
-
         # change it back to X, Y
         combineXY = np.hsplit(combineXY, 2)
         adjust_X = combineXY[0].flatten()
         adjust_Y = combineXY[1].flatten()
-
         # get max precision
         data_rand = self.getMaxPrecision(adjust_Y)
-
         dic_slope = {}
         dic_slope_point = {}
-
         self.calcuate_slope(adjust_X, adjust_Y, dic_slope, dic_slope_point, 1)
         self.calcuate_slope(adjust_X, adjust_Y, dic_slope, dic_slope_point, 2)
         self.calcuate_slope(adjust_X, adjust_Y, dic_slope, dic_slope_point, 3)
-
         final_a_key = max(dic_slope.items(), key=operator.itemgetter(1))[0]
         final_a = float(final_a_key)
-
         dic_b_fitCount = {}
         for (point2, point1) in dic_slope_point[final_a_key]:
             final_b = adjust_Y[point2] - final_a * adjust_X[point2]
             result = np.array([final_a * n + final_b for n in adjust_X]).round(data_rand) - adjust_Y
             dic_b_fitCount['{:.4f}'.format(final_b)] = len(result) - np.count_nonzero(result)
-
         max_b = float(max(dic_b_fitCount.items(), key=operator.itemgetter(1))[0])
-
         # print(dic_slope)
         # print(dic_b_fitCount)
-
         predic_y = np.array([final_a * n + max_b for n in adjust_X]).round(data_rand)
         fitRatio = 100 * (len(adjust_X) - np.count_nonzero(predic_y - adjust_Y)) / len(adjust_X)
-
         predicData_y = np.array([final_a * n + max_b for n in x]).round(data_rand)
         fitDataRatio = 100 * (len(x) - np.count_nonzero(predicData_y - y)) / len(x)
 
         # print(adjust_Y)
         # print(predic_y)
-
         # construct mapping funcion object
         exceptionPoint = {}
         i = 0
@@ -163,12 +159,9 @@ class PatternMapping(Spacer):
         mappingFunction.b = max_b
         mappingFunction.precision = data_rand
         mappingFunction.exceptionPoint = exceptionPoint
-
         return mappingFunction, adjust_X, predic_y, fitRatio, fitDataRatio
 
-    # safe_sparse_dot(X, self.coef_.T, dense_output=True) + self.intercept_
-    # end of main
-
+    @execute_time
     def read_group_file(self):
         read_data_group = pd.read_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, self.hotel_id),
                                    encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
@@ -177,6 +170,7 @@ class PatternMapping(Spacer):
         return read_data_group
 
 
+    @execute_time
     def read_and_preprocess_csv_file(self):
         '''
         读取 ./Result/MINE2/{hotel_id}_observe_gp.csv 文件
@@ -200,93 +194,6 @@ class PatternMapping(Spacer):
         return rate_plan_list_ids, read_data
 
 
-    def linear_prediction1(self, rate_plan_list_ids, read_data):
-        # RP1 = read_data_rt['Group'].iloc[0]
-        RP1 = rate_plan_list_ids[0]
-        rp1_dd = read_data.loc[read_data['RatePlanID'] == RP1].set_index('StayDate')
-        # rp1_dd = read_data.loc[read_data['RatePlanID'] == RP1].set_index(
-        #     ['StayDate', 'LengthOfStayDayCnt', 'PersonCnt'])
-        rp_func = pd.DataFrame()
-        rusult_map = {}
-        mappingFunctionResult = pd.DataFrame()
-        # data_length = len(read_data_rt.index)
-        data_length = len(rate_plan_list_ids)
-        pp = PdfPages(OUTPUT_RESULT_FILE_NAME.format(self.hotel_id))
-        count = 0
-        figsizeWidth = 16
-        figsizeHight = 40 if 16*(data_length/2) > 4096 else round(16*(data_length/2)/100)
-        # figsizeHight = 40
-        # fig = plt.figure(figsize=(figsizeWidth, figsizeHight))
-        # fig, ax = plt.subplots(round(data_length / 2), 2, figsize=(9, 7))
-        fig, axes = plt.subplots(round(data_length / 2), 2, figsize=(100, 10))
-        for i in range(1, data_length):
-            count += 1
-            # logger.info()
-            logger.debug("left compare length: {}".format(data_length - i))
-            # RP2 = read_data_rt['Group'].iloc[i]
-            RP2 = rate_plan_list_ids[i]
-            rp2_dd = read_data.loc[read_data['RatePlanID'] == RP2].set_index('StayDate')
-            # rp2_dd = read_data.loc[read_data['RatePlanID'] == RP2].set_index(
-            #     ['StayDate', 'LengthOfStayDayCnt', 'PersonCnt'])
-            rp_ds = pd.merge(rp1_dd, rp2_dd, on='StayDate')
-
-            if rp_ds.empty:
-                continue
-
-            X = rp_ds[self.observe + '_x'].to_numpy().reshape(-1, 1)
-            y = rp_ds[self.observe + '_y'].to_numpy().reshape(-1, 1)
-            date = rp_ds.index.get_level_values('StayDate').values
-            lr = LinearRegression().fit(X, y)
-            pred_y = lr.predict(X)
-            rp_func = rp_func.append(
-                [[RP2, '{:.4f}'.format(lr.score(X, y)), '{:.4f} * x {:+.4f}'.format(lr.coef_[0][0], lr.intercept_[0])]],
-                ignore_index=True)
-
-            (mappingFunction, adjust_X, predic_y, fitRatio, fitDataRatio) = self.calculateLinear(X, y, date)
-            logger.debug("mappingFunction.exceptionPoint: {}".format(mappingFunction.exceptionPoint))
-            dumpFunction = pickle.dumps(mappingFunction)
-            mappingFunctionResult = mappingFunctionResult.append([[RP1, RP2, len(pickle.dumps(X)), len(pickle.dumps(y)),
-                                                                   len(dumpFunction),
-                                                                   mappingFunction.validation(X, y, date)]],
-                                                                 ignore_index=True)
-            # fig, ax = plt.subplots(figsize=(18, 7))
-            # fig, ax = plt.subplots(round(data_length / 2), 2, count, figsize=(6, 6))
-            # ax = fig.add_subplot(round(data_length/2), 2, count, adjustable='box')
-            plt.title('{:.4f} * x {:+.4f}, fitPointRatio:{:.2f}%, fitDataRatio:{:.2f}%, x_rp:{}, y_rp:{}'.format(
-                mappingFunction.A, mappingFunction.b, fitRatio, fitDataRatio, RP1, RP2))
-            # fig, ax = plt.subplots(figsize=(18, 7))
-            # plt.subplot(round(data_length / 2), 2, i)
-            plt.scatter(X, y, color='blue', s=10)
-            # ax.plot(X, pred_y, color='green', linewidth=1)
-            # ax.plot(adjust_X, predic_y, color='red', linewidth=1)
-            axes[i][0].plot(X, pred_y, color='green', linewidth=1)
-            axes[i][0].plot(adjust_X, predic_y, color='red', linewidth=1)
-            # plt.plot(X, pred_y, color='green', linewidth=1)
-            # plt.plot(adjust_X, predic_y, color='red', linewidth=1)
-            # ax.tight_layout()
-            # pp.savefig(fig)
-            rp_ds.to_csv(
-                '{}{}_Group{}_Line{}_{}_xy.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.hotel_id, self.group_id, i, self.observe),
-                index=False)
-        # pp.close()
-        plt.savefig(OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, self.hotel_id), format='jpg', dpi=300)
-        plt.show()
-        # plt.clf()
-        plt.close()
-        # LearnRegression ResultFile
-        # rp_func.columns = ['RatePlanID', 'Accuracy', 'Formula']
-        # rp_func.sort_values(by='Accuracy', ascending=False, inplace=True)
-        # rp_func.to_csv('{}{}_{}_{}_func.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.hotel_id, self.group_id, self.observe),
-        #                index=False)
-
-        mappingFunctionResult.columns = ['BaseRP', 'ChildRP', 'BaseSize', 'ChildSize', 'MappingFunctionSize',
-                                         'Validation']
-        self.generate_report(mappingFunctionResult)
-        mappingFunctionResult.to_csv(
-            '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.hotel_id, self.group_id, self.observe),
-            index=False)
-
-
     def calc_delta(self, root_no, child_no, abp_df):
         root = abp_df[abp_df['RatePlanID'] == root_no].reset_index(drop=True)
         child = abp_df[abp_df['RatePlanID'] == child_no].reset_index(drop=True)
@@ -308,6 +215,7 @@ class PatternMapping(Spacer):
         print("delta:{}".format(delta))
         return delta
 
+    @execute_time
     def marge_rt_rp(self, group_rate_plan_ids):
         hotelPattern = HotelPattern()
         read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(self.hotel_id)
@@ -317,7 +225,7 @@ class PatternMapping(Spacer):
         input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
         return input_data
 
-
+    @execute_time
     def linear_prediction(self, rate_plan_list_ids, read_data):
         input_data = self.marge_rt_rp(rate_plan_list_ids)
         RP1 = rate_plan_list_ids[0]
@@ -387,7 +295,7 @@ class PatternMapping(Spacer):
                                                     self.observe), index=False)
         return mappingFunctionResult
 
-
+    @execute_time
     def generate_report(self, mappingFunctionResult):
         LOS = HOTEL_PATTERN_LOS
         Observe = self.observe

@@ -1,6 +1,7 @@
 #!/bin/bash
 #获取5000端口的第七列的值给perpid变量
 arr=(5000 8080)
+# shellcheck disable=SC2068
 for var in ${arr[@]};
 do
  perpid=`lsof -Pnl +M -i4 | grep $var | grep python | awk '{print $2}'`
