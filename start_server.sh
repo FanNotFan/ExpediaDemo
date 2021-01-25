@@ -16,7 +16,7 @@ do
  fi
 done
 
-source activate python3.7.3_dev
+conda activate python3.7.3_dev
 
 # for ((i = 0; i < ${#services[@]}; i++))
 # do
