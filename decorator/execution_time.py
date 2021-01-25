@@ -10,7 +10,9 @@ def execute_time(arg):
             if arg and isinstance(arg, str):
                 print('Decorator Pass Parameters：%s' % arg)
             start_time = time.time()
-            logger.debug("[METHOD_NAME: {}] invocation time:{:.2}".format(func.__name__, start_time))
+            time_local = time.localtime(int(start_time))
+            show_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+            logger.debug("[METHOD_NAME: {}] invocation time: {}".format(func.__name__, show_start_time))
             res = func(*args, **kw)
             # logger.debug("[METHOD_NAME: {}] end execute".format(func.__name__))
             exec_time = time.time() - start_time
