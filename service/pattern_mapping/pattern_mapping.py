@@ -11,11 +11,10 @@ from ast import literal_eval
 import matplotlib.pyplot as plt
 from reportlab.lib import colors
 from sklearn import preprocessing
-
-from tools.execution_time import execute_time
 from tools.pdf_reportlab import Graphs
 from reportlab.lib.units import mm, inch
 from reportlab.lib.enums import TA_CENTER
+from decorator.execution_time import execute_time
 from sklearn.linear_model import LinearRegression
 from reportlab.lib.pagesizes import elevenSeventeen
 from service.pattern_mapping.hotel_pattern import HotelPattern
@@ -79,7 +78,7 @@ class PatternMapping(Spacer):
             counter += 1
         return
 
-    @execute_time
+
     def calculateLinear(self, x, y, date):
         '''
         # logic -> y = Ax +B
@@ -218,7 +217,7 @@ class PatternMapping(Spacer):
     @execute_time
     def marge_rt_rp(self, group_rate_plan_ids):
         hotelPattern = HotelPattern()
-        read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(self.hotel_id)
+        read_data_rt, read_data_rp = hotelPattern.read_rt_rp_by_hotel_id(self.hotel_id)
         read_data_hilton = pd.merge(read_data_rt, read_data_rp, how='inner', left_on='RoomTypeID', right_on='RoomTypeID')
         read_data_hilton.rename(columns={'SKUGroupID': 'HotelId'}, inplace=True)
         logger.debug(read_data_hilton)

@@ -9,12 +9,12 @@ def execute_time(arg):
         def wrapper(*args, **kw):
             if arg and isinstance(arg, str):
                 print('Decorator Pass Parameters：%s' % arg)
-            logger.debug("[METHOD_NAME: " + func.__name__ + "] start execute")
             start_time = time.time()
+            logger.debug("[METHOD_NAME: {}] invocation time:{:.2}".format(func.__name__, start_time))
             res = func(*args, **kw)
-            logger.debug("[METHOD_NAME: " + func.__name__ + "] end execute")
-            end_time = time.time()
-            logger.debug("[METHOD_NAME: "+func.__name__+'] takes %ss' % int(end_time - start_time))
+            # logger.debug("[METHOD_NAME: {}] end execute".format(func.__name__))
+            exec_time = time.time() - start_time
+            logger.debug("[METHOD_NAME: {}] takes {:.2}s".format(func.__name__, exec_time))
             return res
         return wrapper
     if callable(arg):

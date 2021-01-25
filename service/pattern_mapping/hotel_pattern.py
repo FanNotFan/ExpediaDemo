@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 import scipy.spatial.distance as dis
 from pandas.core.common import flatten
 from settings import HOTEL_PATTERN_Observes
-from tools.execution_time import execute_time
+from decorator.execution_time import execute_time
 from settings import HOTEL_PATTERN_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER2, HOTEL_PATTERN_OUTPUT_FOLDER
 from settings import HOTEL_PATTERN_RATEPLANLEVEL, HOTEL_PATTERN_LOS, HOTEL_PATTERN_PERSONCNT, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
 matplotlib.use('Agg')
@@ -77,6 +77,12 @@ class HotelPattern(object):
                                   & (read_data['PersonCnt'] == HOTEL_PATTERN_PERSONCNT)]
         read_data.drop(['RatePlanLevel', 'LengthOfStayDayCnt', 'PersonCnt'], axis=1, inplace=True)
         return read_data
+
+    @execute_time
+    def read_rt_rp_by_hotel_id(self, hotel_id):
+        read_data_rt = self.read_file_dbo_RoomType_NoIdent(hotel_id)
+        read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt)
+        return read_data_rt, read_data_rp
 
     @execute_time
     def read_csv_data_and_filter(self, hotel_id):

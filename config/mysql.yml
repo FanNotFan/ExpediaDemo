@@ -1,0 +1,19 @@
+# db.yaml
+mysql:
+  config:
+    host: "127.0.0.1"
+    port: 3306
+    user: "root"
+    password: ""
+    database: "stu_sys"
+
+  parameters:
+    pool_size: 5
+    charset: "utf8"
+
+  fileds:
+    course_cols:
+      - cno
+      - cname
+      - ccredit
+      - cdept
