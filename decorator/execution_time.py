@@ -16,7 +16,7 @@ def execute_time(arg):
             res = func(*args, **kw)
             # logger.debug("[METHOD_NAME: {}] end execute".format(func.__name__))
             exec_time = time.time() - start_time
-            logger.debug("[METHOD_NAME: {}] takes {:.2}s".format(func.__name__, exec_time))
+            logger.debug("[METHOD_NAME: {}] takes {:.2f}s".format(func.__name__, exec_time))
             return res
         return wrapper
     if callable(arg):
