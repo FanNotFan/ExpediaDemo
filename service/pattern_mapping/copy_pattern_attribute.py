@@ -15,7 +15,7 @@ class PatternAttribute:
         read_data_hilton.rename(columns={'SKUGroupID': 'HotelId'}, inplace=True)
         logger.debug(read_data_hilton)
         input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
-        self.translation_offer(260281798, 260282172, input_data)
+        self.translation_offer(260281798, 260281994, input_data)
 
 
     def translation_offer(self, root_no, child_no, abp_df):

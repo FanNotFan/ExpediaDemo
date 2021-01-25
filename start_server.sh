@@ -25,6 +25,7 @@ source activate python3.7.3_dev
 
 # cd /Users/xyao/Library/Mobile\ Documents/com~apple~CloudDocs/JupyterHome/Simplification/ExpediaDemo
 cd /Users/hiCore/Develop/Workspace_Work/Workspace_Pycharm/Expedia_WorkSpace/ExpediaDemo
+git pull
 
 flask run & 
 python tools/websocket.py &
