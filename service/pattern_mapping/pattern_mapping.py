@@ -275,7 +275,7 @@ class PatternMapping(Spacer):
                 #     mappingFunction.A, mappingFunction.b, fitRatio, fitDataRatio, RP2))
                 axes[i][j].set_title('y_rp:{}'.format(RP2))
                 axes[i][j].scatter(X, y, color='blue', s=10)
-                axes[i][j].plot(X, pred_y, color='green', linewidth=1)
+                # axes[i][j].plot(X, pred_y, color='green', linewidth=1)
                 axes[i][j].plot(adjust_X, predic_y, color='red', linewidth=1)
                 axes[i][j].text(X.min(), y.mean(), delta)
                 rp_ds.to_csv(
