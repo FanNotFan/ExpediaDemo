@@ -4,8 +4,8 @@ mysql:
     host: "127.0.0.1"
     port: 3306
     user: "root"
-    password: ""
-    database: "stu_sys"
+    password: "Fanfanbh.89757"
+    database: "jeecg-boot"
 
   parameters:
     pool_size: 5

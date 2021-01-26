@@ -1,10 +1,24 @@
+import os
+import json
+import yaml
 import pymysql
+from settings import CONFIG_FILE_PATH
 
 class ConDb:
+    def read_yaml(self):
+        yamlPath = os.path.join(CONFIG_FILE_PATH, "mysql.yml")
+        with open(yamlPath, encoding='utf-8') as f:
+            file_content = f.read()
+        # print("config:{}".format(file_content))
+        data = yaml.load(file_content, Loader=yaml.FullLoader)
+        return data
+
     def openClose(fun):
         def run(self, sql=None):
+            # 读取配置文件
+            config = self.read_yaml()
             # 创建数据库连接
-            db = pymysql.connect(host='localhost', port=3306, user='root', password='Fanfanbh.89757', db='jeecg-boot', charset='utf8')
+            db = pymysql.connect(host=config['mysql']['config']['host'], port=config['mysql']['config']['port'], user=config['mysql']['config']['user'], password=config['mysql']['config']['password'], db=config['mysql']['config']['database'], charset=config['mysql']['parameters']['charset'])
             # 创建游标
             cursor = db.cursor()
             try:

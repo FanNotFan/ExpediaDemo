@@ -98,6 +98,6 @@ OUTPUT_RESULT_FILE_NAME = "{}_mapping_result.pdf"
 OUTPUT_LINEAR_FILE_NAME = "{}{}_linear_result.jpg"
 os.chdir(HOME_FOLDER)
 DEBUG_LOG_PATH = os.path.join(APP_ROOT, "Log")
-
+CONFIG_FILE_PATH = os.path.join(APP_ROOT, "config")
 DOWNLOAD_PIC_VERSION = 'V1.0.0'
 PATTERN_MAPPING_VERSION = 'V2.0.0'
