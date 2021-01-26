@@ -1,28 +1,28 @@
-import json
+import traceback
+from tools import logger
 from functools import wraps
+from datetime import datetime
+logger = logger.Logger("debug")
 
-class Error1(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
-
-def json_output(func):
-    @wraps(func)
-    def inner(*args, **kwargs):
-        try:
-            result = func(*args, **kwargs)
-        except Error1 as ex:
-            result = {"status": "error", "msg": str(ex)}
-        return json.dumps(result)
-
-    return inner
-
+# 异常输出
+def except_output(msg='Exception Message'):
+    # msg用于自定义函数的提示信息
+    def except_execute(func):
+        @wraps(func)
+        def execept_print(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                sign = '=' * 60 + '\n'
+                # print(f'{sign}>>>Time：\t{datetime.now()}\n>>>Method Name：\t{func.__name__}\n>>>{msg}：\t{e}')
+                # print(f'{sign}{traceback.format_exc()}{sign}')
+                logger.debug(f'{sign}>>>Time：\t{datetime.now()}\n>>>Method Name：\t{func.__name__}\n>>>{msg}：\t{e}')
+                logger.debug(f'{sign}{traceback.format_exc()}{sign}')
+        return execept_print
+    return except_execute
 
 if __name__ == '__main__':
-    # 使用方法
-    @json_output
-    def error():
-        raise Error1("该条异常会被捕获并按JSON格式输出")
+    @except_output()
+    def lig(a=5, b=0):
+        print(a / b)
+    lig()

@@ -14,6 +14,7 @@ from sklearn import preprocessing
 from tools.pdf_reportlab import Graphs
 from reportlab.lib.units import mm, inch
 from reportlab.lib.enums import TA_CENTER
+from decorator.exception import except_output
 from decorator.execution_time import execute_time
 from sklearn.linear_model import LinearRegression
 from reportlab.lib.pagesizes import elevenSeventeen
@@ -78,7 +79,7 @@ class PatternMapping(Spacer):
             counter += 1
         return
 
-
+    @except_output()
     def calculateLinear(self, x, y, date):
         '''
         # logic -> y = Ax +B
@@ -295,6 +296,7 @@ class PatternMapping(Spacer):
         return mappingFunctionResult
 
     @execute_time
+    @except_output()
     def generate_report(self, mappingFunctionResult):
         LOS = HOTEL_PATTERN_LOS
         Observe = self.observe
