@@ -138,3 +138,6 @@ dmypy.json
 *.txt
 *.xlsx
 *.ps1
+
+# don't ignore requirements.txt
+!requirements.txt
