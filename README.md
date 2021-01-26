@@ -9,3 +9,6 @@ conda env list
 
 #### Activate all envs
 source activate <env_name>
+
+#### install dependencies
+pip install -r requirements.txt
