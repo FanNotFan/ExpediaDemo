@@ -2016,8 +2016,8 @@ html[dir], [dir] body, [dir] .epc-page-container {
           ws.onmessage 接收到WebSocketServer发送过来的数据时，就会触发onmessage消息，参数evt中包含server传输过来的数据;
         */
         ws.onopen = function (ev) { //若是连接成功，onopen函数会执行
-            console.log("websocket连接成功")
-            $('#msg').append('<li style="color:#000000;">websocket连接成功</li>');
+            console.log("websocket connected")
+            $('#msg').append('<li style="color:#000000;">websocket connected</li>');
         };
         ws.onmessage = function (ev) {//onmessage会接收到推送过来的消息
             {#console.log(ev.data);#}

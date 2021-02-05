@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 import scipy.spatial.distance as dis
 from pandas.core.common import flatten
 from settings import HOTEL_PATTERN_Observes
-from decorator.execution_time import execute_time
+from mydecorators.execution_time import execute_time
 from settings import HOTEL_PATTERN_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER2, HOTEL_PATTERN_OUTPUT_FOLDER
 from settings import HOTEL_PATTERN_RATEPLANLEVEL, HOTEL_PATTERN_LOS, HOTEL_PATTERN_PERSONCNT, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
 matplotlib.use('Agg')
@@ -121,6 +121,7 @@ class HotelPattern(object):
             df_corr[name] = group.set_index('StayDate')[Observe]
         # https://blog.csdn.net/walking_visitor/article/details/85128461
         # 默认使用 pearson 相关系数计算方法，但这种方式存在误判
+        df_corr.fillna(0, inplace=True)
         df_corr = df_corr.corr()
         np.fill_diagonal(df_corr.values, 0)
         graph = csr_matrix(df_corr >= 0.99)
@@ -190,6 +191,7 @@ class HotelPattern(object):
         fig, ax = plt.subplots(figsize=(18, 7))
         read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
             "CostAmt"].unstack().plot(ax=ax)
+        # plt.tight_layout()
         plt.savefig('{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id))
         # plt.show()
         # plt.close()

@@ -130,7 +130,7 @@ class Websocket:
 		log_path_name = log_path_name.replace(" ","\ ")
 		cmd = r'tail -fn 1000 {log_path}'.format(log_path=log_path_name)
 		popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-		print('连接成功')
+		print('websocket connected')
 
 		# 循环群发
 		while True:

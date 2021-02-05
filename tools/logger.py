@@ -3,7 +3,7 @@ import sys
 import time
 import logging
 from settings import DEBUG_LOG_PATH
-from decorator.singleton import Singleton
+from mydecorators.singleton import Singleton
 
 @Singleton  # 如需打印不同路径的日志（运行日志、审计日志），则不能使用单例模式（注释或删除此行）。此外，还需设定参数name。
 class Logger:

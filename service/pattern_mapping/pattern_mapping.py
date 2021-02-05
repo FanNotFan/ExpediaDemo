@@ -14,8 +14,8 @@ from sklearn import preprocessing
 from tools.pdf_reportlab import Graphs
 from reportlab.lib.units import mm, inch
 from reportlab.lib.enums import TA_CENTER
-from decorator.exception import except_output
-from decorator.execution_time import execute_time
+from mydecorators.exception import except_output
+from mydecorators.execution_time import execute_time
 from sklearn.linear_model import LinearRegression
 from reportlab.lib.pagesizes import elevenSeventeen
 from service.pattern_mapping.hotel_pattern import HotelPattern
