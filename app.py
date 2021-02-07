@@ -93,7 +93,7 @@ def pattern_mapping():
             gp_df = pd.read_csv(gpfile, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
             best_group_id = np.random.choice(
                 gp_df["RatePlanLen"][gp_df["RatePlanLen"] == gp_df["RatePlanLen"].max()].index)
-            logger.debug("The best group index is group_{}".format(best_group_id))
+            logger.debug("The best group index is group_{}".format(int(best_group_id)+1))
             global_bast_group_id = best_group_id
         else:
             read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)

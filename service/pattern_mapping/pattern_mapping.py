@@ -323,7 +323,7 @@ class PatternMapping(Spacer):
         # 分组图
         PatternGroupPngUrl = '{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, self.hotel_id)
         if os.path.exists(PatternGroupPngUrl):
-            content.append(Graphs.draw_text("The best group is group {}".format(self.group_id)))
+            content.append(Graphs.draw_text("The best group is group {}".format(int(self.group_id)+1)))
             content.append(Graphs.draw_text('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, self.hotel_id)))
             content.append(Graphs.draw_text(PatternGroupPngUrl))
             # content.append(Spacer(1, 10 * mm))
@@ -351,7 +351,7 @@ class PatternMapping(Spacer):
         display_content.append(" and ratePlanLevel = {}".format(ratePlanLevel))
         display_content.append(" and LOS = {}".format(LOS))
         display_content.append(" and Observe = {}".format(Observe))
-        display_content.append(" and the best group is group {}".format(self.group_id))
+        display_content.append(" and the best group is group {}".format((int(self.group_id)+1)))
         childTotalSizes = sum(mappingFunctionResult['ChildSize'])
         mappingFunctionTotalSize = sum(mappingFunctionResult['MappingFunctionSize'])
         compressionRatio = (childTotalSizes - mappingFunctionTotalSize) / childTotalSizes

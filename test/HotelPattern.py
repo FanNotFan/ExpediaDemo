@@ -71,11 +71,18 @@ class HotelPatternTest:
             group.reset_index(drop=True, inplace=True)
             df_corr[name] = group.set_index('StayDate')[Observe]
 
-        df_corr.fillna(0, inplace=True)
+        s1 = (df_corr.isnull().sum() / df_corr.shape[0]) >= 0.3 # 得到缺失值的比例大于30%
+        df_corr = df_corr[s1[s1 == False].index.tolist()] # 删除比例大于30%的缺失值
+        # df_corr.fillna(0, inplace=True)
+        # 填充缺失值为均值
+        for column in list(df_corr.columns[df_corr.isnull().sum() > 0]):
+            mean_val = df_corr[column].mean()
+            df_corr[column].fillna(mean_val, inplace=True)
+
         # https://blog.csdn.net/walking_visitor/article/details/85128461
         # 默认使用 pearson 相关系数计算方法，但这种方式存在误判
         # 全量数据
-        df_corr = df_corr[[260281798, 260281804, 260281808, 260281855, 260281860, 260281863, 260281880, 260281894, 260281904, 260281911, 260281920, 260281932, 260281983, 260281991, 260281994, 260281995, 260281999, 260282006, 260282033, 260282043, 260282050, 260282056, 260282062, 260282064, 260282110, 260282123, 260282124, 260282172, 260282183, 260282188, 260332873, 260332875, 260332876, 260332877, 260332879, 260332880, 260332881, 260332882, 260332884, 260332886, 260332889, 260332891, 260332892, 260332893, 260332895, 260332896, 260332897, 260332898, 260332900, 260332902]]
+        # df_corr = df_corr[[260281798, 260281804, 260281808, 260281855, 260281860, 260281863, 260281880, 260281894, 260281904, 260281911, 260281920, 260281932, 260281983, 260281991, 260281994, 260281995, 260281999, 260282006, 260282033, 260282043, 260282050, 260282056, 260282062, 260282064, 260282110, 260282123, 260282124, 260282172, 260282183, 260282188, 260332873, 260332875, 260332876, 260332877, 260332879, 260332880, 260332881, 260332882, 260332884, 260332886, 260332889, 260332891, 260332892, 260332893, 260332895, 260332896, 260332897, 260332898, 260332900, 260332902]]
         # 不包含点
         # df_corr = df_corr[[260281880]]
         # df_corr = df_corr[
@@ -97,11 +104,11 @@ class HotelPatternTest:
         # df_corr = df_corr.mask(df_corr<0.99,other=-1)
         # plt.figure(figsize=(18, 7))
         # seaborn.heatmap(df_corr, center=0, annot=True, cmap='YlGnBu')
-        print("draw graph !!")
-        import networkx as nx
+        # print("draw graph !!")
+        # import networkx as nx
         # C = nx.from_numpy_matrix(np.array(df_corr >= 0.99)).degree
-        graph = nx.Graph(df_corr)
-        nx.draw(graph, with_labels = True)
+        # graph = nx.Graph(df_corr)
+        # nx.draw(graph, with_labels = True)
         # import matplotlib.pyplot as plt
         # plt.pause(0)
         # 创建图的边(Edge)

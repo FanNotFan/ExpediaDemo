@@ -121,7 +121,14 @@ class HotelPattern(object):
             df_corr[name] = group.set_index('StayDate')[Observe]
         # https://blog.csdn.net/walking_visitor/article/details/85128461
         # 默认使用 pearson 相关系数计算方法，但这种方式存在误判
-        df_corr.fillna(0, inplace=True)
+        # df_corr.fillna(0, inplace=True)
+        # 删除缺失值比例大于30%
+        s1 = (df_corr.isnull().sum() / df_corr.shape[0]) >= 0.3  # 得到缺失值的比例大于30%
+        df_corr = df_corr[s1[s1 == False].index.tolist()]  # 删除比例大于30%的缺失值
+
+        for column in list(df_corr.columns[df_corr.isnull().sum() > 0]):
+            mean_val = df_corr[column].mean()
+            df_corr[column].fillna(mean_val, inplace=True)
         df_corr = df_corr.corr()
         np.fill_diagonal(df_corr.values, 0)
         graph = csr_matrix(df_corr >= 0.99)
@@ -178,7 +185,7 @@ class HotelPattern(object):
         df_cdist_copy["Group"] = df_cdist_copy.apply(lambda x: x["Group"].tolist(), axis=1)
         df_cdist_copy["RatePlanLen"] = df_cdist_copy.apply(lambda x: len(x["Group"]), axis=1)
         best_group_id = np.random.choice(df_cdist_copy["RatePlanLen"][df_cdist_copy["RatePlanLen"] == df_cdist_copy["RatePlanLen"].max()].index)
-        logger.debug("The best group is group_{}".format(best_group_id))
+        logger.debug("The best group is group_{}".format(int(best_group_id)+1))
         logger.debug("Generate {}'s grouping files".format(hotel_id))
         df_cdist_copy.to_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, hotel_id), index=False)
         logger.debug("The generation of grouping files is complete")
