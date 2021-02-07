@@ -21,6 +21,19 @@ logger = logger.Logger("debug")
 class HotelPattern(object):
 
     @execute_time
+    def read_file_dbo_RoomType_NoIdent_by_room_id(self, room_id):
+        logger.debug("read file dbo_RoomType_NoIdent.csv")
+        read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
+                                   engine='python',
+                                   header=0).fillna(0)
+        read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
+        read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
+        read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
+        logger.debug(read_data_rt.head(10))
+        read_data_rt = read_data_rt.loc[read_data_rt['RoomTypeID'].isin([room_id])]
+        return read_data_rt
+
+    @execute_time
     def read_file_dbo_RoomType_NoIdent(self, hotel_id):
         logger.debug("read file dbo_RoomType_NoIdent.csv")
         read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
@@ -45,9 +58,6 @@ class HotelPattern(object):
         read_data_rp = read_data_rp.loc[
             (read_data_rp['ActiveStatusTypeID'] == 2) & (read_data_rp['RoomTypeID'].isin(read_data_rt['RoomTypeID']))]
 
-        # read_data_rp = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', sep=',', engine='python', header=0).fillna(0)
-        # read_data_rp = read_data_rp.loc[(read_data_rp['ActiveStatusTypeID'] == 2) \
-        #                                 & (read_data_rp['RoomTypeID'].isin(read_data_rt['RoomTypeID']))][['RatePlanID']]
         return read_data_rp
 
 
@@ -79,10 +89,43 @@ class HotelPattern(object):
         return read_data
 
     @execute_time
+    def read_rt_rp_by_room_id(self, room_id):
+        read_data_rt = self.read_file_dbo_RoomType_NoIdent_by_room_id(room_id)
+        read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt)
+        return read_data_rt, read_data_rp
+
+    @execute_time
     def read_rt_rp_by_hotel_id(self, hotel_id):
         read_data_rt = self.read_file_dbo_RoomType_NoIdent(hotel_id)
         read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt)
         return read_data_rt, read_data_rp
+
+    @execute_time
+    def read_csv_data_and_filter_by_room_type_id(self, room_type_id):
+        '''读取CSV文件并进行过滤
+            First step: 根据 HotelID 获取所有 RoomTypeId (read_data_rt)
+                读取./Data/dbo_RoomType_NoIdent.csv文件 = read_data_rt
+                取出 'SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID' 列
+                选择 ActiveStatusTypeID == 2 并删除ActiveStatusTypeID列
+                选择 SKUGroupID 为指定 HotelID 的数据 = read_data_rt
+
+            Second step: 根据 RoomTypeId 获取对应的 RatePlanID (read_data_rp)
+                读取./Data/dbo_RatePlan_NoIdent.csv 数据文件 = read_data_rp
+                过滤 ActiveStatusTypeID == 2 并且 RoomTypeID == read_data_rt 的 RoomTypeID 的数据并取出它的 RatePlanID  = read_data_rp
+
+            Third step: 根据RatePlanID 获取 CostPrice (read_data)
+                从 ./Data2/HotelID_RatePlanLevelCostPrice.csv.zip 压缩文件中读取数据
+                选出 RatePlanID 在 read_data_rp['RatePlanID'] 中的数据
+                删除 'ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld', 'SupplierUpdateDate', 'SupplierUpdateTPID', 'SupplierUpdateTUID', 'UpdateDate', 'SupplierLogSeqNbr', 'ChangeRequestID' 列
+                选出 'RatePlanLevel' == HOTEL_PATTERN_RATEPLANLEVEL 'LengthOfStayDayCnt' == HOTEL_PATTERN_LOS 'PersonCnt' == HOTEL_PATTERN_PERSONCNT 的数据并删除这几列  = read_data
+            Fourth step:
+        '''
+        read_data_rt = self.read_file_dbo_RoomType_NoIdent_by_room_id(room_type_id)
+        read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt)
+        hotel_id = read_data_rt['SKUGroupID'].values.tolist()[0]
+        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp)
+        return read_data_rt, read_data_rp, read_data
+
 
     @execute_time
     def read_csv_data_and_filter(self, hotel_id):

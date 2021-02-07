@@ -57,7 +57,9 @@ def export_mapping_result(hotelId):
 @app.route("/pattern_mapping", methods=['GET', 'POST'])
 def pattern_mapping():
     logger.debug("REQUEST_METHOD : {}".format(request.method))
+    searchLevel = request.form.get("searchLevel")
     hotel_id = request.form.get('hotelId')
+    room_id = request.form.get('roomId')
     observe = request.form.get('observe')
     enableCache = request.form.get('enableCache')
     group_id = request.form.get('groupID')
@@ -70,12 +72,26 @@ def pattern_mapping():
     ratePlanLevel = ratePlanLevel.strip()
     lengthOfStayDayCnt = lengthOfStayDayCnt.strip()
     logger.debug("hotel_id::" + str(hotel_id))
-    if hotel_id is None or hotel_id == '':
+    if searchLevel is None or searchLevel == '':
+        logger.debug("search level is none")
+        flash('please input search level')
+        return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
+
+    if searchLevel =="Hotel" and (hotel_id is None or hotel_id == ''):
         logger.debug("hotelId is none")
         flash('please input hotelId')
         return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
-    else:
-        hotel_id = int(hotel_id)
+
+    if searchLevel =="Room" and (room_id is None or room_id == ''):
+        logger.debug("room id is none")
+        flash('please input room id')
+        return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
+
+    if searchLevel =="Room":
+        search_id = int(room_id)
+    if searchLevel =="Hotel":
+        search_id = int(hotel_id)
+
     if personCnt is None or personCnt == '' or int(personCnt) <= 0:
         logger.debug("personCnt value is none, default is 2")
         personCnt = 2
@@ -85,9 +101,13 @@ def pattern_mapping():
     logger.debug("todo")
     try:
         hotelPattern = HotelPattern()
-        gpfile = '{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, hotel_id)
-        all_pattern_group_image = '{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
-        gfimg = '{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
+        if searchLevel == "Room":
+            read_data_rt = hotelPattern.read_file_dbo_RoomType_NoIdent_by_room_id(search_id)
+            hotel_id = read_data_rt['SKUGroupID'].values.tolist()[0]
+
+        gpfile = '{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, search_id)
+        all_pattern_group_image = '{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
+        gfimg = '{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
         if os.path.exists(gpfile) and os.path.exists(gfimg) and os.path.exists(all_pattern_group_image) and enableCache=='true':
             logger.debug("Grouping file already exist!!")
             gp_df = pd.read_csv(gpfile, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
@@ -96,27 +116,29 @@ def pattern_mapping():
             logger.debug("The best group index is group_{}".format(int(best_group_id)+1))
             global_bast_group_id = best_group_id
         else:
-            read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)
-            df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, hotel_id)
+            # Room级别: 在 dbo_RoomType_Noident.csv 文件中通过 RoomId 查询 HotelId
+            if searchLevel == "Room":
+                read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter_by_room_type_id(search_id)
+            if searchLevel == "Hotel":
+                read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(search_id)
+            df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, search_id)
             global_bast_group_id = best_group_id
 
-        linear_relationship_image = OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id)
-        mapping_function_file = '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, hotel_id, global_bast_group_id,observe)
+        linear_relationship_image = OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
+        mapping_function_file = '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, search_id, global_bast_group_id,observe)
         if os.path.exists(linear_relationship_image) and os.path.exists(mapping_function_file) and enableCache=='true':
             logger.debug("Mapping function file already exist!!")
-            patternMappingInstance = PatternMapping(hotel_id, observe, int(global_bast_group_id),
+            patternMappingInstance = PatternMapping(search_id, int(hotel_id), searchLevel, observe, int(global_bast_group_id),
                                                     int(ratePlanLevel), int(lengthOfStayDayCnt), int(personCnt))
             mappingFunctionResult = pd.read_csv(mapping_function_file, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
             patternMappingInstance.generate_report(mappingFunctionResult)
         else:
-            patternMappingInstance = PatternMapping(hotel_id, observe, int(global_bast_group_id), int(ratePlanLevel),int(lengthOfStayDayCnt), int(personCnt))
+            patternMappingInstance = PatternMapping(search_id, int(hotel_id), searchLevel, observe, int(global_bast_group_id), int(ratePlanLevel),int(lengthOfStayDayCnt), int(personCnt))
             rate_plan_list_ids, read_data = patternMappingInstance.read_and_preprocess_csv_file()
             mappingFunctionResult = patternMappingInstance.linear_prediction(rate_plan_list_ids, read_data)
             patternMappingInstance.generate_report(mappingFunctionResult)
         flash('Pattern Mapping Had Finished !!!')
-        # return redirect("/export_mapping_result")
-        return redirect(url_for('export_mapping_result',hotelId=hotel_id))
-        # return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
+        return redirect(url_for('export_mapping_result',hotelId=search_id))
     except Exception as e:
         print('Error: ' + str(e))
         flash(str(e))
