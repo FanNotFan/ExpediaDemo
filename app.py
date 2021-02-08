@@ -118,7 +118,7 @@ def pattern_mapping():
         else:
             # Room级别: 在 dbo_RoomType_Noident.csv 文件中通过 RoomId 查询 HotelId
             if searchLevel == "Room":
-                read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter_by_room_type_id(search_id)
+                read_data_rp, read_data = hotelPattern.read_csv_data_and_filter_by_room_type_id(search_id, hotel_id)
             if searchLevel == "Hotel":
                 read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(search_id)
             df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, search_id)

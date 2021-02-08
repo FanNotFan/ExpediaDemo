@@ -246,7 +246,7 @@ class PatternMapping(Spacer):
             return mappingFunctionResult
         count = 0
         row_size = math.ceil((data_length-1) ** 0.5)
-        column_size = 0 if row_size == 0 else math.ceil((data_length-1) / row_size)
+        column_size = math.ceil((data_length-1) / row_size)
         fig, axes = plt.subplots(row_size, column_size, figsize=(20, 30))
         plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.2, wspace=0.3)
         # 设置主标题
@@ -284,11 +284,22 @@ class PatternMapping(Spacer):
                 # 设置子标题
                 # axes[i][j].set_title('{:.4f} * x {:+.4f}, fitPointRatio:{:.2f}%, fitDataRatio:{:.2f}%, y_rp:{}'.format(
                 #     mappingFunction.A, mappingFunction.b, fitRatio, fitDataRatio, RP2))
-                axes[i][j].set_title('y_rp:{}'.format(RP2))
-                axes[i][j].scatter(X, y, color='blue', s=10)
-                # axes[i][j].plot(X, pred_y, color='green', linewidth=1)
-                axes[i][j].plot(adjust_X, predic_y, color='red', linewidth=1)
-                axes[i][j].text(X.min(), y.mean(), delta)
+                if column_size == 1 and row_size == 1:
+                    axes.set_title('y_rp:{}'.format(RP2))
+                    axes.scatter(X, y, color='blue', s=10)
+                    axes.plot(adjust_X, predic_y, color='red', linewidth=1)
+                    axes.text(X.min(), y.mean(), delta)
+                if column_size == 1 and row_size > 1:
+                    axes[i].set_title('y_rp:{}'.format(RP2))
+                    axes[i].scatter(X, y, color='blue', s=10)
+                    axes[i].plot(adjust_X, predic_y, color='red', linewidth=1)
+                    axes[i].text(X.min(), y.mean(), delta)
+                if column_size > 1 and row_size > 1:
+                    axes[i][j].set_title('y_rp:{}'.format(RP2))
+                    axes[i][j].scatter(X, y, color='blue', s=10)
+                    # axes[i][j].plot(X, pred_y, color='green', linewidth=1)
+                    axes[i][j].plot(adjust_X, predic_y, color='red', linewidth=1)
+                    axes[i][j].text(X.min(), y.mean(), delta)
                 rp_ds.to_csv(
                     '{}{}_Group{}_Line{}_{}_xy.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, self.search_id, self.group_id,
                                                            count,
@@ -373,7 +384,7 @@ class PatternMapping(Spacer):
             img.hAlign = TA_CENTER
             content.append(img)
 
-        if not mappingFunctionResult.empty:
+        if mappingFunctionResult is not None and not mappingFunctionResult.empty:
             childTotalSizes = sum(mappingFunctionResult['ChildSize'])
             mappingFunctionTotalSize = sum(mappingFunctionResult['MappingFunctionSize'])
             compressionRatio = (childTotalSizes - mappingFunctionTotalSize) / childTotalSizes
