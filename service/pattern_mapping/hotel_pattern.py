@@ -205,9 +205,9 @@ class HotelPattern(object):
             return df_cdist, 0
 
         count = 0
-        column_size = math.ceil(n ** 0.5)
-        row_size = math.ceil(n / column_size)
-        fig, axes = plt.subplots(row_size, column_size, figsize=(20, 30))
+        row_size = math.ceil(n ** 0.5)
+        column_size = math.ceil(n / row_size)
+        fig, axes = plt.subplots(row_size, column_size, figsize=(column_size*4, row_size*5))
         plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.1, wspace=0.2)
         for i in range(row_size):
             for j in range(0, column_size):
@@ -215,8 +215,17 @@ class HotelPattern(object):
                     continue
                 nodes = df_corr.index[np.where(labels == count)]
                 df_cdist = df_cdist.append([["CostAmt", count, nodes.values]], ignore_index=True)
-                read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-                    "CostAmt"].unstack().plot(ax=axes[i][j])
+                if column_size == 1 and row_size == 1:
+                    read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
+                        "CostAmt"].unstack().plot(ax=axes)
+                if column_size == 1 and row_size > 1:
+                    read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
+                        "CostAmt"].unstack().plot(ax=axes[i])
+                if column_size > 1 and row_size > 1:
+                    read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
+                        "CostAmt"].unstack().plot(ax=axes[i][j])
+                # read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
+                #     "CostAmt"].unstack().plot(ax=axes[i][j])
                 logger.debug("left compatue length: {}".format(n - count))
                 count += 1
         plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id))

@@ -247,7 +247,7 @@ class PatternMapping(Spacer):
         count = 0
         row_size = math.ceil((data_length-1) ** 0.5)
         column_size = math.ceil((data_length-1) / row_size)
-        fig, axes = plt.subplots(row_size, column_size, figsize=(20, 30))
+        fig, axes = plt.subplots(row_size, column_size, figsize=(column_size*4, row_size*5))
         plt.subplots_adjust(left=0.125, bottom=0.04, right=0.9, top=1, hspace=0.2, wspace=0.3)
         # 设置主标题
         fig.suptitle('x_rp:{}'.format(RP1))
