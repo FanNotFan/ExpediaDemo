@@ -98,6 +98,7 @@ class HotelPatternTest:
         # df_corr = df_corr[[260332873,260332875, 260332876, 260332877, 260332879, 260332880, 260332881, 260332882, 260332884, 260332886, 260332889, 260332891, 260332892, 260332893, 260332895, 260332896, 260332897, 260332898, 260332900, 260332902]]
         # cycle graph
         # df_corr = df_corr[[260282183, 260332873, 260332876, 260332877, 260282188, 260332879, 260332880, 260332881, 260332882, 260332884, 260332886, 260332889, 260332891, 260332892, 260332893, 260332895, 260332896, 260332897, 260332898, 260332900, 260332902]]
+        df_corr = df_corr[[260281852, 260281853, 260281857]]
         df_corr = df_corr.corr()
         np.fill_diagonal(df_corr.values, 0)
 
@@ -127,7 +128,7 @@ class HotelPatternTest:
         # has_circle = dfs.findcircle()
         # if has_circle:
         #     print(dfs.trace)
-        graph = csr_matrix(df_corr >= 0.99)
+        graph = csr_matrix(df_corr >= 0.90)
         n, labels = csgraph.connected_components(graph, connection='strong')
 
         output_df = pd.DataFrame(columns=['GroupID', 'RatePlanID'])

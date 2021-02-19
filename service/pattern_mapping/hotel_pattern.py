@@ -10,7 +10,7 @@ from sklearn import preprocessing
 from scipy.sparse import csr_matrix
 import scipy.spatial.distance as dis
 from pandas.core.common import flatten
-from settings import HOTEL_PATTERN_Observes
+from settings import HOTEL_PATTERN_Observes, Observe
 from mydecorators.execution_time import execute_time
 from settings import HOTEL_PATTERN_INPUT_FOLDER, HOTEL_PATTERN_INPUT_FOLDER2, HOTEL_PATTERN_OUTPUT_FOLDER
 from settings import HOTEL_PATTERN_RATEPLANLEVEL, HOTEL_PATTERN_LOS, HOTEL_PATTERN_PERSONCNT, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
@@ -60,7 +60,7 @@ class HotelPattern(object):
 
 
     @execute_time
-    def read_file_RatePlanLevelCostPrice(self, hotel_id, read_data_rp):
+    def read_file_RatePlanLevelCostPrice(self, hotel_id, read_data_rp_id_list):
         '''
          #     RatePlanID,StayDate,RatePlanLevel,PersonCnt,LengthOfStayDayCnt,ActiveStatusTypeID,
          #     RatePlanLevelCostPriceLogSeqNbr,CostAmt,PriceAmt,CostCode,ChangeRequestIDOld,
@@ -74,7 +74,7 @@ class HotelPattern(object):
         read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
                                 sep=',', engine='python',
                                 header=0).fillna(0)
-        read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp['RatePlanID'])]
+        read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp_id_list)]
         logger.debug(read_data)
         read_data.drop(['ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld'], axis=1,
                        inplace=True)
@@ -121,7 +121,9 @@ class HotelPattern(object):
         # read_data_rt = self.read_file_dbo_RoomType_NoIdent_by_room_id(room_type_id)
         read_data_rp = self.read_file_dboRatePlanNoIdent([room_type_id])
         # hotel_id = read_data_rt['SKUGroupID'].values.tolist()[0]
-        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp)
+        read_data_rp_id_list = read_data_rp['RatePlanID']
+        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp_id_list)
+        read_data = self.zscore_filter(read_data)
         return read_data_rp, read_data
 
 
@@ -147,14 +149,20 @@ class HotelPattern(object):
         '''
         read_data_rt = self.read_file_dbo_RoomType_NoIdent(hotel_id)
         read_data_rp = self.read_file_dboRatePlanNoIdent(read_data_rt['RoomTypeID'].values.tolist())
-        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp)
+        read_data_rp_id_list = read_data_rp['RatePlanID']
+        read_data = self.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp_id_list)
+        read_data = self.zscore_filter(read_data)
         return read_data_rt, read_data_rp, read_data
 
-
-    def get_connected_components(self, read_data, Observe):
+    @execute_time
+    def zscore_filter(self, read_data):
         read_data['z_score'] = stats.zscore(read_data[Observe])
         logger.debug(read_data.head(20))
         read_data = read_data.loc[read_data['z_score'].abs() <= 3]
+        return read_data
+
+
+    def get_connected_components(self, read_data):
         read_data_gp = read_data[['StayDate', Observe, 'RatePlanID']].groupby(['RatePlanID'], sort=False)
         df_corr = pd.DataFrame()
         for name, group in read_data_gp:
@@ -178,7 +186,7 @@ class HotelPattern(object):
         return n, labels, df_corr
 
     @execute_time
-    def generate_group_file_and_img(self, read_data, hotel_id):
+    def generate_group_file_and_img(self, read_data, as_file_name_search_id):
         '''生成结果到CSV文件
             First Step: 对观测值的RatePlanID进行分组 (read_data_gp)
                 创建一个空的 DataFrame 来存储数据 = df_cdist
@@ -198,7 +206,7 @@ class HotelPattern(object):
         # for Observe in HOTEL_PATTERN_Observes:
         #     if Observe != "CostAmt":
         #         continue
-        n, labels, df_corr = self.get_connected_components(read_data, "CostAmt")
+        n, labels, df_corr = self.get_connected_components(read_data)
         df_cdist = pd.DataFrame()
 
         if n <= 0:
@@ -214,21 +222,21 @@ class HotelPattern(object):
                 if count >= n:
                     continue
                 nodes = df_corr.index[np.where(labels == count)]
-                df_cdist = df_cdist.append([["CostAmt", count, nodes.values]], ignore_index=True)
+                df_cdist = df_cdist.append([[Observe, count, nodes.values]], ignore_index=True)
                 if column_size == 1 and row_size == 1:
                     read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-                        "CostAmt"].unstack().plot(ax=axes)
+                        Observe].unstack().plot(ax=axes)
                 if column_size == 1 and row_size > 1:
                     read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-                        "CostAmt"].unstack().plot(ax=axes[i])
+                        Observe].unstack().plot(ax=axes[i])
                 if column_size > 1 and row_size > 1:
                     read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-                        "CostAmt"].unstack().plot(ax=axes[i][j])
+                        Observe].unstack().plot(ax=axes[i][j])
                 # read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-                #     "CostAmt"].unstack().plot(ax=axes[i][j])
+                #     Observe].unstack().plot(ax=axes[i][j])
                 logger.debug("left compatue length: {}".format(n - count))
                 count += 1
-        plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id))
+        plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, as_file_name_search_id))
 
         df_cdist.columns = ['Observe', 'GroupID', 'Group']
         df_cdist_copy = df_cdist.copy()
@@ -236,56 +244,28 @@ class HotelPattern(object):
         df_cdist_copy["RatePlanLen"] = df_cdist_copy.apply(lambda x: len(x["Group"]), axis=1)
         best_group_id = np.random.choice(df_cdist_copy["RatePlanLen"][df_cdist_copy["RatePlanLen"] == df_cdist_copy["RatePlanLen"].max()].index)
         logger.debug("The best group is group_{}".format(int(best_group_id)+1))
-        logger.debug("Generate {}'s grouping files".format(hotel_id))
-        df_cdist_copy.to_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, hotel_id), index=False)
+        logger.debug("Generate {}'s grouping files".format(as_file_name_search_id))
+        df_cdist_copy.to_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, as_file_name_search_id), index=False)
         logger.debug("The generation of grouping files is complete")
         nodes = df_corr.index[np.where(labels == best_group_id)]
-        self.save_sigle_pattern_group_img(read_data, nodes, hotel_id)
+
+        # save sigle pattern group img
+        fig, ax = plt.subplots(figsize=(18, 7))
+        read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
+            Observe].unstack().plot(ax=ax)
+        # plt.tight_layout()
+        plt.savefig('{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, as_file_name_search_id))
+        # plt.show()
+        # plt.close()
         return df_cdist, best_group_id
 
 
-    def save_sigle_pattern_group_img(self, read_data, nodes, hotel_id):
-        fig, ax = plt.subplots(figsize=(18, 7))
-        read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
-            "CostAmt"].unstack().plot(ax=ax)
-        # plt.tight_layout()
-        plt.savefig('{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id))
-        # plt.show()
-        # plt.close()
-
-    def show_comparison_with_other_amt(self, df_cdist):
-        ''' 对分组后Observe = CostAmt 的数据与其他费用数据做多标签二值化后计算距离
-            取出 Observe=='CostAmt'分组后Group列的 ratePlanId 数组
-            遍历剩余非 'CostAmt' 的Group列与 Observe = CostAmt 的 Group 做多标签二值化
-            计算 CostAmt 与其他费用的距离
-        :return:
-        '''
-        XA = df_cdist.loc[df_cdist['Observe'] == 'CostAmt']['Group'].to_numpy()
-        for Observe in HOTEL_PATTERN_Observes:
-            if Observe == 'CostAmt':
-                continue
-            XB = df_cdist.loc[df_cdist['Observe'] == Observe]['Group'].to_numpy()
-            mlb = preprocessing.MultiLabelBinarizer()
-
-            mlb.fit([flatten(XA), flatten(XB)])
-
-            XA = mlb.transform(XA)
-            XB = mlb.transform(XB)
-
-            d = dis.cdist(XA, XB, 'cosine')
-
-            df = pd.DataFrame(d)
-            df = df.mask(df < 0.5, 0)
-
-            # print(Observe)
-            logger.debug("current observe is {} compare with CostAmt".format(Observe))
-            # print(df)
-            logger.debug(df)
-
-
-if __name__ == '__main__':
-    hotelPattern = HotelPattern()
-    read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(16639)
-    df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, 16639)
-    hotelPattern.show_comparison_with_other_amt(df_cdist)
+# if __name__ == '__main__':
+#     hotelPattern = HotelPattern()
+#     # read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(16639)
+#     room_id = 193407
+#     hotel_id = 16639
+#     read_data_rp_id_list = [260281852, 260281853, 260281857]
+#     read_data = hotelPattern.read_file_RatePlanLevelCostPrice(hotel_id, read_data_rp_id_list)
+#     df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, room_id)
 

@@ -305,12 +305,12 @@ class PatternAttribute:
         input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
         self.multi_base(input_data, COL_CFG)
 
-if __name__ == '__main__':
-    hotel_id = 16639
-    hotelPattern = HotelPattern()
-    read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)
-    df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, hotel_id)
-    group_rate_plan_ids = df_cdist.loc[(df_cdist['GroupID'] == 1) & (df_cdist['Observe'] == 'CostAmt')]['Group'].iloc[0].tolist()
-    patternAttribute = PatternAttribute()
-    patternAttribute.main(group_rate_plan_ids, read_data_rt)
+# if __name__ == '__main__':
+#     hotel_id = 16639
+#     hotelPattern = HotelPattern()
+#     read_data_rt, read_data_rp, read_data = hotelPattern.read_csv_data_and_filter(hotel_id)
+#     df_cdist, best_group_id = hotelPattern.generate_group_file_and_img(read_data, hotel_id)
+#     group_rate_plan_ids = df_cdist.loc[(df_cdist['GroupID'] == 1) & (df_cdist['Observe'] == 'CostAmt')]['Group'].iloc[0].tolist()
+#     patternAttribute = PatternAttribute()
+#     patternAttribute.main(group_rate_plan_ids, read_data_rt)
 

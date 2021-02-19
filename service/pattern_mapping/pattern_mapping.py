@@ -21,7 +21,7 @@ from reportlab.lib.pagesizes import elevenSeventeen
 from service.pattern_mapping.hotel_pattern import HotelPattern
 from reportlab.platypus import SimpleDocTemplate, Spacer, Image
 from service.pattern_mapping.mapping_function import MappingFunction
-from settings import PATTERN_MAPPING_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER
+from settings import PATTERN_MAPPING_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER, Observe
 from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
 from settings import OUTPUT_RESULT_FILE_NAME, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
 plt.rcParams.update({'figure.max_open_warning': 0})
@@ -169,7 +169,7 @@ class PatternMapping(Spacer):
         read_data_group = pd.read_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, self.search_id),
                                    encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
         read_data_group = read_data_group.loc[
-            (read_data_group['GroupID'] == self.group_id) & (read_data_group['Observe'] == 'CostAmt')]
+            (read_data_group['GroupID'] == self.group_id) & (read_data_group['Observe'] == Observe)]
         return read_data_group
 
 

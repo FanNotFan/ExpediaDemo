@@ -89,6 +89,7 @@ def pattern_mapping():
 
     if searchLevel =="Room":
         search_id = int(room_id)
+
     if searchLevel =="Hotel":
         search_id = int(hotel_id)
 
@@ -98,7 +99,6 @@ def pattern_mapping():
     if lengthOfStayDayCnt is None or lengthOfStayDayCnt == '' or int(lengthOfStayDayCnt) <= 0:
         logger.debug("lengthOfStayDayCnt value is none, default is 1")
         lengthOfStayDayCnt = 1
-    logger.debug("todo")
     try:
         hotelPattern = HotelPattern()
         if searchLevel == "Room":
@@ -111,8 +111,7 @@ def pattern_mapping():
         if os.path.exists(gpfile) and os.path.exists(gfimg) and os.path.exists(all_pattern_group_image) and enableCache=='true':
             logger.debug("Grouping file already exist!!")
             gp_df = pd.read_csv(gpfile, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
-            best_group_id = np.random.choice(
-                gp_df["RatePlanLen"][gp_df["RatePlanLen"] == gp_df["RatePlanLen"].max()].index)
+            best_group_id = np.random.choice(gp_df["RatePlanLen"][gp_df["RatePlanLen"] == gp_df["RatePlanLen"].max()].index)
             logger.debug("The best group index is group_{}".format(int(best_group_id)+1))
             global_bast_group_id = best_group_id
         else:
