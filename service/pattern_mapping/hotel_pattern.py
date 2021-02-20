@@ -236,7 +236,7 @@ class HotelPattern(object):
                 #     Observe].unstack().plot(ax=axes[i][j])
                 logger.debug("left compatue length: {}".format(n - count))
                 count += 1
-        plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, as_file_name_search_id))
+        plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, as_file_name_search_id), dpi=200, bbox_inches='tight')
 
         df_cdist.columns = ['Observe', 'GroupID', 'Group']
         df_cdist_copy = df_cdist.copy()
