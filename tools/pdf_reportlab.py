@@ -16,7 +16,7 @@ from settings import PATTERN_MAPPING_OUTPUT_FOLDER,PATTERN_ATTRIBUTE_OUTPUT_FOLD
 # 注册字体
 # 支持中文下载SimSun.ttf字体，并把它放在/ python3.7/site-packages/reportlab/fonts文件夹下
 # https://github.com/StellarCN/scp_zh/tree/master/fonts
-pdfmetrics.registerFont(TTFont('SimSun', 'SimSun.ttf'))
+# pdfmetrics.registerFont(TTFont('SimSun', 'SimSun.ttf'))
 
 
 class Graphs:
