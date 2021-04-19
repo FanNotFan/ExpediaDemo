@@ -28,7 +28,7 @@ class Graphs:
     def draw_title():
         style = getSampleStyleSheet()
         ct = style['Title']
-        ct.fontName = 'SimSun'
+        # ct.fontName = 'SimSun'
         ct.fontSize = 20
         # 设置行距
         ct.leading = 50
@@ -47,7 +47,7 @@ class Graphs:
         # 常规字体(非粗体或斜体)
         ct = style['BodyText']
         # 使用的字体s
-        ct.fontName = 'SimSun'
+        # ct.fontName = 'SimSun'
         ct.fontSize = 14
         # 设置自动换行
         ct.wordWrap = 'CJK'
@@ -65,7 +65,7 @@ class Graphs:
     def draw_table(*args):
         col_width = 120
         style = [
-            ('FONTNAME', (0, 0), (-1, -1), 'SimSun'),  # 字体
+            # ('FONTNAME', (0, 0), (-1, -1), 'SimSun'),  # 字体
             ('BACKGROUND', (0, 0), (-1, 0), '#d5dae6'),  # 设置第一行背景颜色
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # 对齐
             ('VALIGN', (-1, 0), (-2, 0), 'MIDDLE'),  # 对齐
@@ -98,7 +98,7 @@ class Graphs:
         bc.categoryAxis.categoryNames = ax
         # 图示
         leg = Legend()
-        leg.fontName = 'SimSun'
+        # leg.fontName = 'SimSun'
         leg.alignment = 'right'
         leg.boxAnchor = 'ne'
         leg.x = 465

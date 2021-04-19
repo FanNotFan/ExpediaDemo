@@ -95,7 +95,7 @@ COL_CFG = pd.DataFrame(
 # HOME_FOLDER = './'
 # HOME_FOLDER = '/Users/xyao/Library/Mobile Documents/com~apple~CloudDocs/JupyterHome/Simplification/'
 # HOME_FOLDER = '/Users/lefan/Develope/Workspace_Pycharm/Simplification'
-HOME_FOLDER = '/home/lefan/Workspace_Python/workspace/POC-Web/Simplification'
+HOME_FOLDER = '/Users/lefan/Develope/Workspace_Pycharm/Simplification'
 OUTPUT_RESULT_FILE_NAME = "{}_mapping_result.pdf"
 OUTPUT_LINEAR_FILE_NAME = "{}{}_linear_result.jpg"
 os.chdir(HOME_FOLDER)
