@@ -5,6 +5,7 @@ from flask import Flask, send_file, make_response, url_for
 from threading import Lock
 from flask import request, redirect
 from datetime import timedelta
+from service.pattern_mapping.gen_tree_graph import GenTreeGraph
 from tools import logger
 # 方法来渲染模板
 # 将模板名和你想作为关键字的参数传入模板的变量
@@ -56,7 +57,7 @@ def export_mapping_result(hotelId):
 
 @app.route("/pattern_mapping", methods=['GET', 'POST'])
 def pattern_mapping():
-    logger.debug("REQUEST_METHOD : {}".format(request.method))
+    logger.info("REQUEST_METHOD : {}".format(request.method))
     searchLevel = request.form.get("searchLevel")
     hotel_id = request.form.get('hotelId')
     room_id = request.form.get('roomId')
@@ -71,19 +72,19 @@ def pattern_mapping():
     personCnt = personCnt.strip()
     ratePlanLevel = ratePlanLevel.strip()
     lengthOfStayDayCnt = lengthOfStayDayCnt.strip()
-    logger.debug("hotel_id::" + str(hotel_id))
+    logger.info("hotel_id::" + str(hotel_id))
     if searchLevel is None or searchLevel == '':
-        logger.debug("search level is none")
+        logger.info("search level is none")
         flash('please input search level')
         return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
 
     if searchLevel =="Hotel" and (hotel_id is None or hotel_id == ''):
-        logger.debug("hotelId is none")
+        logger.info("hotelId is none")
         flash('please input hotelId')
         return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
 
     if searchLevel =="Room" and (room_id is None or room_id == ''):
-        logger.debug("room id is none")
+        logger.info("room id is none")
         flash('please input room id')
         return render_template("room.html", page_version=PATTERN_MAPPING_VERSION)
 
@@ -94,10 +95,10 @@ def pattern_mapping():
         search_id = int(hotel_id)
 
     if personCnt is None or personCnt == '' or int(personCnt) <= 0:
-        logger.debug("personCnt value is none, default is 2")
+        logger.info("personCnt value is none, default is 2")
         personCnt = 2
     if lengthOfStayDayCnt is None or lengthOfStayDayCnt == '' or int(lengthOfStayDayCnt) <= 0:
-        logger.debug("lengthOfStayDayCnt value is none, default is 1")
+        logger.info("lengthOfStayDayCnt value is none, default is 1")
         lengthOfStayDayCnt = 1
     try:
         hotelPattern = HotelPattern()
@@ -109,10 +110,10 @@ def pattern_mapping():
         all_pattern_group_image = '{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
         gfimg = '{}{}_patterngroup.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
         if os.path.exists(gpfile) and os.path.exists(gfimg) and os.path.exists(all_pattern_group_image) and enableCache=='true':
-            logger.debug("Grouping file already exist!!")
+            logger.info("Grouping file already exist!!")
             gp_df = pd.read_csv(gpfile, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
             best_group_id = np.random.choice(gp_df["RatePlanLen"][gp_df["RatePlanLen"] == gp_df["RatePlanLen"].max()].index)
-            logger.debug("The best group index is group_{}".format(int(best_group_id)+1))
+            logger.info("The best group index is group_{}".format(int(best_group_id)+1))
             global_bast_group_id = best_group_id
         else:
             # Room级别: 在 dbo_RoomType_Noident.csv 文件中通过 RoomId 查询 HotelId
@@ -126,7 +127,7 @@ def pattern_mapping():
         linear_relationship_image = OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, search_id)
         mapping_function_file = '{}{}_{}_{}_mappingFunction.csv'.format(PATTERN_MAPPING_OUTPUT_FOLDER, search_id, global_bast_group_id,observe)
         if os.path.exists(linear_relationship_image) and os.path.exists(mapping_function_file) and enableCache=='true':
-            logger.debug("Mapping function file already exist!!")
+            logger.info("Mapping function file already exist!!")
             patternMappingInstance = PatternMapping(search_id, int(hotel_id), searchLevel, observe, int(global_bast_group_id),
                                                     int(ratePlanLevel), int(lengthOfStayDayCnt), int(personCnt))
             mappingFunctionResult = pd.read_csv(mapping_function_file, encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
@@ -134,7 +135,10 @@ def pattern_mapping():
         else:
             patternMappingInstance = PatternMapping(search_id, int(hotel_id), searchLevel, observe, int(global_bast_group_id), int(ratePlanLevel),int(lengthOfStayDayCnt), int(personCnt))
             rate_plan_list_ids, read_data = patternMappingInstance.read_and_preprocess_csv_file()
-            mappingFunctionResult = patternMappingInstance.linear_prediction(rate_plan_list_ids, read_data)
+            input_data = patternMappingInstance.marge_rt_rp(rate_plan_list_ids)
+            genTreeGraph = GenTreeGraph()
+            genTreeGraph.genGraph(input_data)
+            mappingFunctionResult = patternMappingInstance.linear_prediction(rate_plan_list_ids, read_data, input_data)
             patternMappingInstance.generate_report(mappingFunctionResult)
         flash('Pattern Mapping Had Finished !!!')
         return redirect(url_for('export_mapping_result',hotelId=search_id))
@@ -146,13 +150,13 @@ def pattern_mapping():
 
 @app.route("/download", methods=['GET', 'POST'])
 def download():
-    logger.debug("REQUEST_METHOD : {}".format(request.method))
+    logger.info("REQUEST_METHOD : {}".format(request.method))
     searchEngine = request.form.get('searchEngine')
     if searchEngine is None or searchEngine == '':
         searchEngine = "Google"
-        logger.debug("searchEngine : {}".format(searchEngine))
+        logger.info("searchEngine : {}".format(searchEngine))
     else:
-        logger.debug("searchEngine : {}".format(searchEngine))
+        logger.info("searchEngine : {}".format(searchEngine))
     keyword = request.form.get('keyword')
     numberOfImages = request.form.get('numberOfImages')
     keyword = keyword.strip()
@@ -215,4 +219,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

@@ -16,8 +16,8 @@ def except_output(msg='Exception Message'):
                 sign = '=' * 60 + '\n'
                 # print(f'{sign}>>>Time：\t{datetime.now()}\n>>>Method Name：\t{func.__name__}\n>>>{msg}：\t{e}')
                 # print(f'{sign}{traceback.format_exc()}{sign}')
-                logger.debug(f'{sign}>>>Time：\t{datetime.now()}\n>>>Method Name：\t{func.__name__}\n>>>{msg}：\t{e}')
-                logger.debug(f'{sign}{traceback.format_exc()}{sign}')
+                logger.info(f'{sign}>>>Time：\t{datetime.now()}\n>>>Method Name：\t{func.__name__}\n>>>{msg}：\t{e}')
+                logger.info(f'{sign}{traceback.format_exc()}{sign}')
         return execept_print
     return except_execute
 

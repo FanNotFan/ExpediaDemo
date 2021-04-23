@@ -1,6 +1,6 @@
 #!/bin/bash
 #获取5000端口的第七列的值给perpid变量
-arr=(5000 8080)
+arr=(5000 5005)
 # shellcheck disable=SC2068
 for var in ${arr[@]};
 do

@@ -34,7 +34,7 @@ class HotelPatternTest:
         read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
         read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
         read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
-        logger.debug(read_data_rt.head(10))
+        logger.info(read_data_rt.head(10))
         read_data_rt = read_data_rt.loc[read_data_rt['SKUGroupID'].isin([HotelID])]
         read_data_rp = pd.read_csv(INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', sep=',', engine='python', header=0).fillna(0)
         read_data_rp = read_data_rp.loc[(read_data_rp['ActiveStatusTypeID'] == 2) \
@@ -42,7 +42,7 @@ class HotelPatternTest:
         read_data = pd.read_csv(INPUT_FOLDER2 + str(HotelID) + '_RatePlanLevelCostPrice.csv.zip', sep=',', engine='python',
                                 header=0).fillna(0)
         read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp['RatePlanID'])]
-        logger.debug(read_data)
+        logger.info(read_data)
 
         #     RatePlanID,StayDate,RatePlanLevel,PersonCnt,LengthOfStayDayCnt,ActiveStatusTypeID,
         #     RatePlanLevelCostPriceLogSeqNbr,CostAmt,PriceAmt,CostCode,ChangeRequestIDOld,

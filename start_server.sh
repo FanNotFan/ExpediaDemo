@@ -1,6 +1,6 @@
 #!/bin/bash
 #获取5000端口的第七列的值给perpid变量
-arr=(5000 8080)
+arr=(5000 5005)
 # shellcheck disable=SC2068
 for var in ${arr[@]};
 do
@@ -17,7 +17,7 @@ do
  fi
 done
 
-source activate python3.7.3_dev
+source activate python3.8.5_dev
 
 # for ((i = 0; i < ${#services[@]}; i++))
 # do
@@ -25,7 +25,7 @@ source activate python3.7.3_dev
 # done
 
 # cd /Users/xyao/Library/Mobile\ Documents/com~apple~CloudDocs/JupyterHome/Simplification/ExpediaDemo
-cd /Users/hiCore/Develop/Workspace_Work/Workspace_Pycharm/Expedia_WorkSpace/ExpediaDemo
+cd /Users/lefan/Develope/Workspace_Pycharm/ExpediaDemo
 git pull
 
 flask run & 

@@ -13,12 +13,11 @@
 import os
 import time
 import platform
-import pandas as pd
 import numpy as np
+import pandas as pd
 from multiprocessing import cpu_count
 
 # __file__ refers to the file settings.py
-
 t = time.localtime(time.time())
 foldername = str(t.__getattribute__("tm_year")) + "-" + str(t.__getattribute__("tm_mon")) + "-" + \
              str(t.__getattribute__("tm_mday"))
@@ -60,6 +59,10 @@ PATTERN_MAPPING_INPUT_FOLDER = './Data2/'
 PATTERN_MAPPING_OUTPUT_FOLDER = './Result/MINE2/'
 PATTERN_MAPPING_INPUT_FOLDER2 = './Result/MINE2/'
 
+GEN_TREE_GRAPH_INPUT_FOLDER = './Data/'
+GEN_TREE_GRAPH_OUTPUT_FOLDER = './Result/DAG.nosync/'
+GEN_TREE_GRAPH_INPUT_FOLDER2 = './Result/MINE2/'
+
 COL_CFG = pd.DataFrame(
     np.array(
         [['RatePlanID', 'None', 1],
@@ -100,6 +103,7 @@ OUTPUT_RESULT_FILE_NAME = "{}_mapping_result.pdf"
 OUTPUT_LINEAR_FILE_NAME = "{}{}_linear_result.jpg"
 os.chdir(HOME_FOLDER)
 DEBUG_LOG_PATH = os.path.join(APP_ROOT, "Log")
+print("Settings DEBUG_LOG_PATH:{}".format(DEBUG_LOG_PATH))
 CONFIG_FILE_PATH = os.path.join(APP_ROOT, "config")
 DOWNLOAD_PIC_VERSION = 'V1.0.0'
 PATTERN_MAPPING_VERSION = 'V2.0.0'

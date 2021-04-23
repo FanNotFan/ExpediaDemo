@@ -8,6 +8,7 @@ import os
 import time
 import subprocess
 # from settings import DEBUG_LOG_PATH
+from nbstreamreader import NonBlockingStreamReader as NBSR
 
 global users
 users = set()
@@ -15,7 +16,7 @@ users = set()
 class Websocket:
 	sock = socket.socket()
 	sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	sock.bind(("0.0.0.0", 8080))
+	sock.bind(("127.0.0.1", 5005))
 	sock.listen(5)
 
 	def get_headers(self, data):
@@ -129,6 +130,7 @@ class Websocket:
 			open(log_path_name, 'w')
 		log_path_name = log_path_name.replace(" ","\ ")
 		cmd = r'tail -fn 1000 {log_path}'.format(log_path=log_path_name)
+		print("CMD:{}".format(cmd))
 		popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 		print('websocket connected')
 
@@ -136,16 +138,34 @@ class Websocket:
 		while True:
 			# message = input("输入发送的数据:")
 			# popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+			# message = NBSR(popen.stdout).readline(0.1)
 			message = str(popen.stdout.readline().strip(), encoding="utf-8")
 			print(message)
 			s_2 = copy.copy(users)
 			for u in s_2:
 				print(u)
 				self.send_msg(u, bytes(message, encoding="utf-8"))
+			# if message:
+			# 	message = str(message.strip(), encoding="utf-8")
+			# 	print(message)
+			# 	s_2 = copy.copy(users)
+			# 	for u in s_2:
+			# 		print(u)
+			# 		self.send_msg(u, bytes(message, encoding="utf-8"))
+			# if not message:
+			# 	print('[No more data]')
+			# 	break
+			# else:
+			# 	# message = str(nbsr.readline().strip(), encoding="utf-8")
+			# 	print(message)
+			# 	s_2 = copy.copy(users)
+			# 	for u in s_2:
+			# 		print(u)
+			# 		self.send_msg(u, bytes(message, encoding="utf-8"))
 
 
-websocket = Websocket()
-websocket.main()
+# websocket = Websocket()
+# websocket.main()
 
 if __name__ == '__main__':
 	websocket = Websocket()

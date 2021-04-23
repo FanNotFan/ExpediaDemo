@@ -22,7 +22,7 @@ from service.pattern_mapping.hotel_pattern import HotelPattern
 from reportlab.platypus import SimpleDocTemplate, Spacer, Image
 from service.pattern_mapping.mapping_function import MappingFunction
 from settings import PATTERN_MAPPING_INPUT_FOLDER, PATTERN_MAPPING_OUTPUT_FOLDER, Observe
-from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER
+from settings import HOTEL_PATTERN_OUTPUT_FOLDER, PATTERN_ATTRIBUTE_OUTPUT_FOLDER, GEN_TREE_GRAPH_OUTPUT_FOLDER
 from settings import OUTPUT_RESULT_FILE_NAME, HOTEL_PATTERN_LOS, OUTPUT_LINEAR_FILE_NAME
 plt.rcParams.update({'figure.max_open_warning': 0})
 min_max_scaler = preprocessing.MinMaxScaler()
@@ -180,7 +180,7 @@ class PatternMapping(Spacer):
         读取 ./Result/MINE2/{hotel_id}_observe_gp.csv 文件
         :return:
         '''
-        logger.debug("read_and_preprocess_group_csv_file begin")
+        logger.info("read_and_preprocess_group_csv_file begin")
         # read_data_rt = pd.read_csv('{}{}_{}_gp.csv'.format(PATTERN_ATTRIBUTE_INPUT_FOLDER2, self.hotel_id, self.observe), \
         #                    encoding='utf-8', sep=',', engine='python', header=0).fillna(0)
         #     RP2 = 260281795
@@ -194,7 +194,7 @@ class PatternMapping(Spacer):
                                   & (read_data['PersonCnt'] == self.person_cnt)]
         # read_data = read_data[['StayDate', self.observe, 'RatePlanID']]
         read_data = read_data[['StayDate', 'LengthOfStayDayCnt', 'PersonCnt', self.observe, 'RatePlanID']]
-        logger.debug("read_and_preprocess_group_csv_file done")
+        logger.info("read_and_preprocess_group_csv_file done")
         return rate_plan_list_ids, read_data
 
     @except_output()
@@ -229,14 +229,13 @@ class PatternMapping(Spacer):
             read_data_rt, read_data_rp = hotelPattern.read_rt_rp_by_hotel_id(self.search_id)
         read_data_hilton = pd.merge(read_data_rt, read_data_rp, how='inner', left_on='RoomTypeID', right_on='RoomTypeID')
         read_data_hilton.rename(columns={'SKUGroupID': 'HotelId'}, inplace=True)
-        logger.debug(read_data_hilton)
+        logger.info(read_data_hilton)
         input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
         return input_data
 
     @execute_time
     @except_output()
-    def linear_prediction(self, rate_plan_list_ids, read_data):
-        input_data = self.marge_rt_rp(rate_plan_list_ids)
+    def linear_prediction(self, rate_plan_list_ids, read_data, input_data):
         RP1 = rate_plan_list_ids[0]
         rp1_dd = read_data.loc[read_data['RatePlanID'] == RP1].set_index('StayDate')
         rp_func = pd.DataFrame()
@@ -252,7 +251,7 @@ class PatternMapping(Spacer):
         # 设置主标题
         fig.suptitle('x_rp:{}'.format(RP1))
         for i in range(row_size):
-            logger.debug("left compare length: {}".format(data_length - count))
+            logger.info("left compare length: {}".format(data_length - count))
             for j in range(0, column_size):
                 count += 1
                 if count >= data_length:
@@ -274,7 +273,7 @@ class PatternMapping(Spacer):
                     ignore_index=True)
 
                 (mappingFunction, adjust_X, predic_y, fitRatio, fitDataRatio) = self.calculateLinear(X, y, date)
-                logger.debug("mappingFunction.exceptionPoint: {}".format(mappingFunction.exceptionPoint))
+                logger.info("mappingFunction.exceptionPoint: {}".format(mappingFunction.exceptionPoint))
                 dumpFunction = pickle.dumps(mappingFunction)
                 mappingFunctionResult = mappingFunctionResult.append(
                     [[RP1, RP2, len(pickle.dumps(X)), len(pickle.dumps(y)),
@@ -354,6 +353,17 @@ class PatternMapping(Spacer):
             img.hAlign = TA_CENTER
             content.append(img)
 
+        # 树状图
+        content.append(Graphs.draw_text("RatePlan Attribute Relationship Graph"))
+        pic_url = '{}{}_tree_pic.png'.format(GEN_TREE_GRAPH_OUTPUT_FOLDER, self.search_id)
+        if os.path.exists(pic_url):
+            content.append(Spacer(1, 10 * mm))
+            img = Image(pic_url)
+            img.drawHeight = 60 * mm
+            img.drawWidth = 200 * mm
+            img.hAlign = TA_CENTER
+            content.append(img)
+
         # 线性方程图
         LinearPngUrl = OUTPUT_LINEAR_FILE_NAME.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, self.search_id)
         if os.path.exists(LinearPngUrl):
@@ -374,15 +384,6 @@ class PatternMapping(Spacer):
         display_content.append(" and Observe = {}".format(Observe))
         display_content.append(" and the best group is group {}".format((int(self.group_id)+1)))
 
-        content.append(Graphs.draw_text("RatePlan Attribute Relationship Graph"))
-        pic_url = '{}{}_{}_pic.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, 16639, 166628)
-        if os.path.exists(pic_url):
-            content.append(Spacer(1, 10 * mm))
-            img = Image(pic_url)
-            img.drawHeight = 60 * mm
-            img.drawWidth = 200 * mm
-            img.hAlign = TA_CENTER
-            content.append(img)
 
         if mappingFunctionResult is not None and not mappingFunctionResult.empty:
             childTotalSizes = sum(mappingFunctionResult['ChildSize'])

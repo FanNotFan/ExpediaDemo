@@ -22,34 +22,34 @@ class HotelPattern(object):
 
     @execute_time
     def read_file_dbo_RoomType_NoIdent_by_room_id(self, room_id):
-        logger.debug("read file dbo_RoomType_NoIdent.csv")
+        logger.info("read file dbo_RoomType_NoIdent.csv")
         read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
                                    engine='python',
                                    header=0).fillna(0)
         read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
         read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
         read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
-        logger.debug(read_data_rt.head(10))
+        logger.info(read_data_rt.head(10))
         read_data_rt = read_data_rt.loc[read_data_rt['RoomTypeID'].isin([room_id])]
         return read_data_rt
 
     @execute_time
     def read_file_dbo_RoomType_NoIdent(self, hotel_id):
-        logger.debug("read file dbo_RoomType_NoIdent.csv")
+        logger.info("read file dbo_RoomType_NoIdent.csv")
         read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
                                    engine='python',
                                    header=0).fillna(0)
         read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
         read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
         read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
-        logger.debug(read_data_rt.head(10))
+        logger.info(read_data_rt.head(10))
         read_data_rt = read_data_rt.loc[read_data_rt['SKUGroupID'].isin([hotel_id])]
         return read_data_rt
 
 
     @execute_time
     def read_file_dboRatePlanNoIdent(self, room_type_id_list):
-        logger.debug("read file dbo_RatePlan_NoIdent.csv")
+        logger.info("read file dbo_RatePlan_NoIdent.csv")
         read_data_rp = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RatePlan_NoIdent.csv', encoding='utf-8', sep=',',
                                    engine='python',
                                    header=0).fillna(0)
@@ -70,12 +70,12 @@ class HotelPattern(object):
         :param read_data_rp:
         :return:
         '''
-        logger.debug("read file {}_RatePlanLevelCostPrice.csv.zip".format(hotel_id))
+        logger.info("read file {}_RatePlanLevelCostPrice.csv.zip".format(hotel_id))
         read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
                                 sep=',', engine='python',
                                 header=0).fillna(0)
         read_data = read_data.loc[read_data['RatePlanID'].isin(read_data_rp_id_list)]
-        logger.debug(read_data)
+        logger.info(read_data)
         read_data.drop(['ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld'], axis=1,
                        inplace=True)
         read_data.drop(['SupplierUpdateDate', 'SupplierUpdateTPID', 'SupplierUpdateTUID'], axis=1, inplace=True)
@@ -157,7 +157,7 @@ class HotelPattern(object):
     @execute_time
     def zscore_filter(self, read_data):
         read_data['z_score'] = stats.zscore(read_data[Observe])
-        logger.debug(read_data.head(20))
+        logger.info(read_data.head(20))
         read_data = read_data.loc[read_data['z_score'].abs() <= 3]
         return read_data
 
@@ -182,7 +182,7 @@ class HotelPattern(object):
         np.fill_diagonal(df_corr.values, 0)
         graph = csr_matrix(df_corr >= 0.99)
         n, labels = csgraph.connected_components(graph)
-        logger.debug('The number of connected components: {} || The number of groupby[RatePlanID]:{}'.format(n,read_data_gp.ngroups))
+        logger.info('The number of connected components: {} || The number of groupby[RatePlanID]:{}'.format(n,read_data_gp.ngroups))
         return n, labels, df_corr
 
     @execute_time
@@ -234,7 +234,7 @@ class HotelPattern(object):
                         Observe].unstack().plot(ax=axes[i][j])
                 # read_data.loc[(read_data['RatePlanID'].isin(nodes))].groupby(['StayDate', 'RatePlanID']).sum()[
                 #     Observe].unstack().plot(ax=axes[i][j])
-                logger.debug("left compatue length: {}".format(n - count))
+                logger.info("left compatue length: {}".format(n - count))
                 count += 1
         plt.savefig('{}{}_all_pattern_group.png'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, as_file_name_search_id), dpi=200, bbox_inches='tight')
 
@@ -243,10 +243,10 @@ class HotelPattern(object):
         df_cdist_copy["Group"] = df_cdist_copy.apply(lambda x: x["Group"].tolist(), axis=1)
         df_cdist_copy["RatePlanLen"] = df_cdist_copy.apply(lambda x: len(x["Group"]), axis=1)
         best_group_id = np.random.choice(df_cdist_copy["RatePlanLen"][df_cdist_copy["RatePlanLen"] == df_cdist_copy["RatePlanLen"].max()].index)
-        logger.debug("The best group is group_{}".format(int(best_group_id)+1))
-        logger.debug("Generate {}'s grouping files".format(as_file_name_search_id))
+        logger.info("The best group is group_{}".format(int(best_group_id)+1))
+        logger.info("Generate {}'s grouping files".format(as_file_name_search_id))
         df_cdist_copy.to_csv('{}{}_patterngroup.csv'.format(HOTEL_PATTERN_OUTPUT_FOLDER, as_file_name_search_id), index=False)
-        logger.debug("The generation of grouping files is complete")
+        logger.info("The generation of grouping files is complete")
         nodes = df_corr.index[np.where(labels == best_group_id)]
 
         # save sigle pattern group img

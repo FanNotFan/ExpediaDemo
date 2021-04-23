@@ -13,7 +13,7 @@ class PatternAttribute:
     def main(self, group_rate_plan_ids, read_data_rt, read_data_rp):
         read_data_hilton = pd.merge(read_data_rt, read_data_rp, how='inner', left_on='RoomTypeID', right_on='RoomTypeID')
         read_data_hilton.rename(columns={'SKUGroupID': 'HotelId'}, inplace=True)
-        logger.debug(read_data_hilton)
+        logger.info(read_data_hilton)
         input_data = read_data_hilton.loc[read_data_hilton['RatePlanID'].isin(group_rate_plan_ids)]
         self.translation_offer(260281798, 260281994, input_data)
 

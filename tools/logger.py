@@ -7,7 +7,7 @@ from mydecorators.singleton import Singleton
 
 @Singleton  # 如需打印不同路径的日志（运行日志、审计日志），则不能使用单例模式（注释或删除此行）。此外，还需设定参数name。
 class Logger:
-    def __init__(self, set_level="INFO",
+    def __init__(self, set_level="DEBUG",
                  name=os.path.split(os.path.splitext(sys.argv[0])[0])[-1],
                  log_name=time.strftime("%Y-%m-%d.log", time.localtime()),
                  # log_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "log"),
@@ -24,7 +24,7 @@ class Logger:
             set_level = self._exec_type()  # 设置set_level为None，自动获取当前运行模式
         self.__logger = logging.getLogger(name)
         self.setLevel(
-            getattr(logging, set_level.upper()) if hasattr(logging, set_level.upper()) else logging.INFO)  # 设置日志级别
+            getattr(logging, set_level.upper()) if hasattr(logging, set_level.upper()) else logging.DEBUG)  # 设置日志级别
         if not os.path.exists(log_path):  # 创建日志目录
             os.makedirs(log_path)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -48,10 +48,10 @@ class Logger:
         self.__logger = func
 
     def _exec_type(self):
-        return "DEBUG" if os.environ.get("IPYTHONENABLE") else "INFO"
+        return "DEBUG" if os.environ.get("IPYTHONENABLE") else "DEBUG"
 
 if __name__ == '__main__':
-    x = Logger("debug")
+    x = Logger("DEBUG")
     x.critical("这是一个 critical 级别的问题！")
     x.error("这是一个 error 级别的问题！")
     x.warning("这是一个 warning 级别的问题！")
