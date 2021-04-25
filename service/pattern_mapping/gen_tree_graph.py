@@ -227,10 +227,6 @@ class GenTreeGraph:
 
         print('------', file_name, '------')
         cols = col_cfg['name'].tolist()
-        final_offer = pd.DataFrame(
-            columns=['root', 'child', 'root_roomname', 'child_roomname', 'detail', 'root_price', 'child_price',
-                     'price'])
-
         # got distance
         distance_df = self.get_distance(input_data_final, col_cfg)
 
