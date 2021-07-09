@@ -23,6 +23,24 @@ hotel_id_list = [16639,862,1797,6362,12079,12160,12800,14388,15144,15212,19692,1
 # read_data_rp[["RatePlanID","RoomTypeID"]].groupby(['RoomTypeID'], sort=False).count().sort_values(by=['RatePlanID'], ascending=False).head(30).to_csv('{}{}.csv'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, "RoomRatePlanStatistics"))
 
 
+def read_file_dbo_RoomType_NoIdent_by_room_id(room_type_id):
+    print("read file dbo_RoomType_NoIdent.csv")
+    read_data_rt = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER + 'dbo_RoomType_NoIdent.csv', encoding='utf-8', sep=',',
+                               engine='python',
+                               header=0).fillna(0)
+    read_data_rt = read_data_rt[['SKUGroupID', 'RoomTypeID', 'ActiveStatusTypeID']]
+    read_data_rt = read_data_rt.loc[read_data_rt['ActiveStatusTypeID'] == 2]
+    read_data_rt.drop(['ActiveStatusTypeID'], axis=1, inplace=True)
+    read_data_rt = read_data_rt.loc[read_data_rt['RoomTypeID'].isin([room_type_id])]
+    return read_data_rt
+
+
+
+# if __name__ == '__main__':
+#     read_data_rt = read_file_dbo_RoomType_NoIdent_by_room_id(193413)
+#     hotel_id = read_data_rt['SKUGroupID'].values.tolist()[0]
+#     print(hotel_id)
+
 # 倒着找
 # for hotel_id in hotel_id_list:
 #     read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
@@ -76,20 +94,57 @@ hotel_id_list = [16639,862,1797,6362,12079,12160,12800,14388,15144,15212,19692,1
 
 
 
-for hotel_id in hotel_id_list:
-    # 通过Hotel_ID 获取所有Active的RoomTypeID
-    read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
-                                sep=',', engine='python',
-                                header=0).fillna(0)
-    read_data = read_data.loc[read_data['ActiveStatusTypeID'] == 2]
-    read_data = read_data[["RoomTypeID", "RatePlanID"]]
-    read_data_gp = read_data.drop_duplicates("RatePlanID").groupby(['RoomTypeID'], sort=False)
-    df_rate_plan = pd.DataFrame()
-    for name, group in read_data_gp:
-        print("group_name:{}".format(name))
-        print(group['RatePlanID'].tolist())
-        df_rate_plan = df_rate_plan.append(pd.DataFrame([[name, len(group['RatePlanID'].tolist()), group['RatePlanID'].tolist()]]))
-    read_data_group_df = read_data_gp.count().sort_values(by=['RatePlanID'], ascending=False).head(30)
-    df_rate_plan.columns = ['RoomTypeId', 'Count', 'RatePlanIDList']
-    df_rate_plan.sort_values(by='Count', ascending=False, inplace=True)
-    df_rate_plan.to_csv('{}{}_{}.csv'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id, "RoomRatePlanStatistics"))
+# for hotel_id in hotel_id_list:
+#     # 通过Hotel_ID 获取所有Active的RoomTypeID
+#     read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
+#                                 sep=',', engine='python',
+#                                 header=0).fillna(0)
+#     read_data = read_data.loc[read_data['ActiveStatusTypeID'] == 2]
+#     read_data = read_data[["RoomTypeID", "RatePlanID"]]
+#     read_data_gp = read_data.drop_duplicates("RatePlanID").groupby(['RoomTypeID'], sort=False)
+#     df_rate_plan = pd.DataFrame()
+#     for name, group in read_data_gp:
+#         print("group_name:{}".format(name))
+#         print(group['RatePlanID'].tolist())
+#         df_rate_plan = df_rate_plan.append(pd.DataFrame([[name, len(group['RatePlanID'].tolist()), group['RatePlanID'].tolist()]]))
+#     read_data_group_df = read_data_gp.count().sort_values(by=['RatePlanID'], ascending=False).head(30)
+#     df_rate_plan.columns = ['RoomTypeId', 'Count', 'RatePlanIDList']
+#     df_rate_plan.sort_values(by='Count', ascending=False, inplace=True)
+#     df_rate_plan.to_csv('{}{}_{}.csv'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id, "RoomRatePlanStatistics"))
+
+
+
+
+# for hotel_id in hotel_id_list:
+# HOTEL_PATTERN_LOS = 1
+# HOTEL_PATTERN_PERSONCNT = 2
+# HOTEL_PATTERN_RATEPLANLEVEL = 0
+# hotel_id = 16639
+# read_data = pd.read_csv(HOTEL_PATTERN_INPUT_FOLDER2 + str(hotel_id) + '_RatePlanLevelCostPrice.csv.zip',
+#                             sep=',', engine='python',
+#                             header=0).fillna(0)
+# read_data = read_data.loc[read_data['ActiveStatusTypeID'] == 2]
+# read_data.drop(['ActiveStatusTypeID', 'RatePlanLevelCostPriceLogSeqNbr', 'ChangeRequestIDOld'], axis=1,
+#                    inplace=True)
+# read_data.drop(['SupplierUpdateDate', 'SupplierUpdateTPID', 'SupplierUpdateTUID'], axis=1, inplace=True)
+# read_data.drop(['UpdateDate', 'SupplierLogSeqNbr', 'ChangeRequestID'], axis=1, inplace=True)
+# read_data = read_data.loc[(read_data['RatePlanLevel'] == HOTEL_PATTERN_RATEPLANLEVEL) & (
+#                 read_data['LengthOfStayDayCnt'] == HOTEL_PATTERN_LOS)
+#                               & (read_data['PersonCnt'] == HOTEL_PATTERN_PERSONCNT)]
+#
+# read_data.drop(['RatePlanLevel', 'LengthOfStayDayCnt', 'PersonCnt'], axis=1, inplace=True)
+# read_data = read_data[["StayDate", "CostAmt", "RoomTypeID", "RatePlanID"]]
+#
+# read_data_gp = read_data[['StayDate', "CostAmt", 'RatePlanID']].groupby(['RatePlanID'], sort=False)
+# df_corr = pd.DataFrame()
+# for name, group in read_data_gp:
+#     group.reset_index(drop=True, inplace=True)
+#     df_corr[name] = group.set_index('StayDate')["CostAmt"]
+# df_corr.fillna(0, inplace=True)
+# 删除缺失值比例大于30%
+# s1 = (df_corr.isnull().sum() / df_corr.shape[0]) >= 100  # 得到缺失值的比例大于30%
+# df_corr_copy = df_corr[s1[s1 == False].index.tolist()]
+# print("llll")
+# df_rate_plan.to_csv('{}{}_{}.csv'.format(PATTERN_ATTRIBUTE_OUTPUT_FOLDER, hotel_id, "RoomRatePlanStatistics"))
+
+[260281795, 260281796, 260281837, 260281842, 260281852, 260281853, 260281917, 260281918, 260281973, 260281977, 260282002, 260282003, 260282028, 260282030, 260282055, 260282057, 260282083, 260282084, 260282115, 260282118, 260282169, 260282170, 260282226, 260282228]
